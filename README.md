@@ -16,7 +16,9 @@ No build step or network access is required.
 
 - Explore the map with keyboard movement, touch controls, or tap-to-move.
 - First-time players see a short tutorial, and the help button can reopen it.
+- The title carries the by Zahir credit in the header.
 - Start the single glowing lesson; later lessons stay locked until the current one is completed.
+- Question dialogs include a small visual card for the current Hindi word.
 - Correct answers stay on screen briefly, add words to the journal, and animate the next unlock.
 - Tap the ज्ञान द्वार after all chapter words are complete to open the next level.
 - Pronunciation uses packaged `.m4a`, `.mp3`, and `.ogg` files with Web Speech fallback.

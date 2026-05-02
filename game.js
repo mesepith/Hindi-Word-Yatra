@@ -16,6 +16,41 @@
     { ext: "ogg", type: 'audio/ogg; codecs="opus"' },
   ];
 
+  const WORD_VISUALS = {
+    namaste: { emoji: "🙏", color: "#047c86", ground: "#fff8e4" },
+    dhanyavaad: { emoji: "🎁", color: "#df5267", ground: "#fff8e4" },
+    haan: { emoji: "✓", color: "#2f9b70", ground: "#e8faef" },
+    nahi: { emoji: "✕", color: "#df5267", ground: "#fff0f2" },
+    kripya: { emoji: "🤲", color: "#7a4fb1", ground: "#f4eefc" },
+    maa: { emoji: "👩", color: "#df5267", ground: "#fff0f2" },
+    pita: { emoji: "👨", color: "#4457a6", ground: "#eef2ff" },
+    bhai: { emoji: "👦", color: "#047c86", ground: "#e9fbf7" },
+    behan: { emoji: "👧", color: "#df5267", ground: "#fff0f2" },
+    dost: { emoji: "🤝", color: "#2f9b70", ground: "#e8faef" },
+    ghar: { emoji: "🏠", color: "#df5267", ground: "#fff8e4" },
+    kamra: { emoji: "🛏️", color: "#4457a6", ground: "#eef2ff" },
+    darwaza: { emoji: "🚪", color: "#7a4c2f", ground: "#fff8e4" },
+    paani: { emoji: "💧", color: "#047c86", ground: "#e9fbff" },
+    khaana: { emoji: "🍽️", color: "#f3b23c", ground: "#fff8e4" },
+    doodh: { emoji: "🥛", color: "#047c86", ground: "#f8fbfc" },
+    seb: { emoji: "🍎", color: "#df5267", ground: "#fff0f2" },
+    kitaab: { emoji: "📘", color: "#4457a6", ground: "#eef2ff" },
+    school: { emoji: "🏫", color: "#047c86", ground: "#e9fbf7" },
+    patang: { emoji: "🪁", color: "#df5267", ground: "#fff8e4" },
+    gaadi: { emoji: "🚗", color: "#4457a6", ground: "#eef2ff" },
+    suraj: { emoji: "☀️", color: "#f3b23c", ground: "#fff8e4" },
+    chaand: { emoji: "🌙", color: "#7a4fb1", ground: "#f4eefc" },
+    phool: { emoji: "🌼", color: "#f3b23c", ground: "#fff8e4" },
+    laal: { emoji: "●", color: "#df5267", ground: "#fff0f2" },
+    neela: { emoji: "●", color: "#4457a6", ground: "#eef2ff" },
+    hara: { emoji: "●", color: "#2f9b70", ground: "#e8faef" },
+    peela: { emoji: "●", color: "#f3b23c", ground: "#fff8e4" },
+    ek: { emoji: "1", color: "#047c86", ground: "#e9fbf7" },
+    do: { emoji: "2", color: "#047c86", ground: "#e9fbf7" },
+    teen: { emoji: "3", color: "#047c86", ground: "#e9fbf7" },
+    paanch: { emoji: "5", color: "#047c86", ground: "#e9fbf7" },
+  };
+
   const WORDS = [
     { id: "namaste", hindi: "नमस्ते", translit: "namaste", english: "hello", sentence: "नमस्ते, आप कैसे हैं?", sentenceEnglish: "Hello, how are you?" },
     { id: "dhanyavaad", hindi: "धन्यवाद", translit: "dhanyavaad", english: "thank you", sentence: "धन्यवाद, माँ।", sentenceEnglish: "Thank you, Mom." },
@@ -123,7 +158,7 @@
       hint: () => "Choose the matching Hindi word.",
       prompt: (word) => `Find the Hindi word for ${titleCase(word.english)}.`,
       main: (word) => word.hindi,
-      sub: (word) => `${word.translit} · ${titleCase(word.english)}`,
+      sub: (word) => word.translit,
     },
     meaning: {
       label: "Meaning Gate",
@@ -131,7 +166,7 @@
       hint: (word) => `Sounds like: ${word.translit}`,
       prompt: (word) => `What does ${word.hindi} mean?`,
       main: (word) => titleCase(word.english),
-      sub: (word) => word.hindi,
+      sub: (word) => word.translit,
     },
     listen: {
       label: "Sound Gate",
@@ -139,7 +174,7 @@
       hint: () => "Hear the word, then pick it.",
       prompt: () => "Which Hindi word did you hear?",
       main: (word) => word.hindi,
-      sub: (word) => `${word.translit} · ${titleCase(word.english)}`,
+      sub: (word) => word.translit,
     },
     sentence: {
       label: "Story Gate",
@@ -147,14 +182,13 @@
       hint: (word) => word.sentenceEnglish,
       prompt: (word) => `Complete: ${word.sentence.replace(word.hindi, "____")}`,
       main: (word) => word.hindi,
-      sub: (word) => `${word.translit} · ${titleCase(word.english)}`,
+      sub: (word) => word.translit,
     },
   };
 
   const els = {
     best: document.querySelector("#bestValue"),
     canvas: document.querySelector("#gameCanvas"),
-    challengeArt: document.querySelector("#challengeArt"),
     challengeFeedback: document.querySelector("#challengeFeedback"),
     challengeHint: document.querySelector("#challengeHint"),
     challengeMode: document.querySelector("#challengeMode"),
@@ -188,7 +222,6 @@
     score: document.querySelector("#scoreValue"),
     startTutorial: document.querySelector("#startTutorialButton"),
     sound: document.querySelector("#soundButton"),
-    touchInteract: document.querySelector("#touchInteractButton"),
     tutorial: document.querySelector("#tutorialOverlay"),
     tutorialButton: document.querySelector("#tutorialButton"),
     victoryCopy: document.querySelector("#victoryCopy"),
@@ -204,19 +237,20 @@
     completed: new Set(),
     focus: MAX_FOCUS,
     gems: 0,
+    guideCallout: null,
     keys: new Set(),
     learned: new Map(),
     message: "",
     messageTimer: 0,
     particles: [],
     pathOpening: false,
+    pendingGuide: null,
     player: { x: CHAPTERS[0].start.x, y: CHAPTERS[0].start.y, facing: 1 },
     portalTarget: false,
     score: 0,
     streak: 0,
     tapTarget: null,
     time: 0,
-    touchVector: { x: 0, y: 0 },
     unlockAnimation: null,
   };
 
@@ -225,6 +259,7 @@
   let audioContext = null;
   let preferredAudioFormat = null;
   let cachedVoices = [];
+  let lastNearbyActivation = 0;
 
   function boot() {
     preferredAudioFormat = chooseAudioFormat();
@@ -245,8 +280,9 @@
     });
 
     els.canvas.addEventListener("pointerdown", handleCanvasPointer);
-    els.interact.addEventListener("click", interactWithNearby);
-    els.touchInteract.addEventListener("click", interactWithNearby);
+    els.nearbyChip.addEventListener("pointerup", handleNearbyChipActivate);
+    els.nearbyChip.addEventListener("click", handleNearbyChipActivate);
+    els.nearbyChip.addEventListener("touchend", handleNearbyChipActivate);
     els.restart.addEventListener("click", resetAdventure);
     els.playAgain.addEventListener("click", resetAdventure);
     els.keepExploring.addEventListener("click", () => {
@@ -263,18 +299,6 @@
     els.sound.addEventListener("click", () => {
       const word = state.challenge?.word || latestWord();
       if (word) playWord(word, els.sound);
-    });
-
-    document.querySelectorAll(".move-pad button").forEach((button) => {
-      const dir = button.dataset.dir;
-      button.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        button.setPointerCapture?.(event.pointerId);
-        setTouchDirection(dir);
-      });
-      button.addEventListener("pointerup", clearTouchDirection);
-      button.addEventListener("pointercancel", clearTouchDirection);
-      button.addEventListener("lostpointercapture", clearTouchDirection);
     });
 
     if ("speechSynthesis" in window) {
@@ -341,19 +365,13 @@
     state.tapTarget = { x: clamp(x, 42, WORLD.width - 42), y: clamp(y, 72, WORLD.height - 46) };
   }
 
-  function setTouchDirection(dir) {
-    state.tapTarget = null;
-    const vectors = {
-      up: { x: 0, y: -1 },
-      down: { x: 0, y: 1 },
-      left: { x: -1, y: 0 },
-      right: { x: 1, y: 0 },
-    };
-    state.touchVector = vectors[dir] || { x: 0, y: 0 };
-  }
-
-  function clearTouchDirection() {
-    state.touchVector = { x: 0, y: 0 };
+  function handleNearbyChipActivate(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const now = window.performance?.now?.() || Date.now();
+    if (now - lastNearbyActivation < 450) return;
+    lastNearbyActivation = now;
+    interactWithNearby();
   }
 
   function resetAdventure() {
@@ -362,9 +380,11 @@
     state.completed = new Set();
     state.focus = MAX_FOCUS;
     state.gems = 0;
+    state.guideCallout = null;
     state.learned = new Map();
     state.particles = [];
     state.pathOpening = false;
+    state.pendingGuide = null;
     state.score = 0;
     state.streak = 0;
     state.tapTarget = null;
@@ -398,9 +418,6 @@
       if (state.keys.has("arrowright") || state.keys.has("d")) moveX += 1;
       if (state.keys.has("arrowup") || state.keys.has("w")) moveY -= 1;
       if (state.keys.has("arrowdown") || state.keys.has("s")) moveY += 1;
-
-      moveX += state.touchVector.x;
-      moveY += state.touchVector.y;
 
       if (!moveX && !moveY && state.tapTarget) {
         const dx = state.tapTarget.x - state.player.x;
@@ -441,6 +458,14 @@
         state.unlockAnimation.pulse += dt;
       }
     }
+    if (state.guideCallout) {
+      state.guideCallout.life -= dt;
+      if (state.guideCallout.life <= 0) {
+        state.guideCallout = null;
+      } else {
+        state.guideCallout.pulse += dt;
+      }
+    }
     state.particles = state.particles
       .map((particle) => ({
         ...particle,
@@ -462,6 +487,7 @@
     drawTapTarget();
     drawParticles();
     drawUnlockAnimation();
+    drawGuideCallout();
     drawPlayer();
     drawChapterBanner(chapter);
   }
@@ -556,7 +582,7 @@
 
   function drawBazaarScene() {
     drawStall(126, 430, "#df5267", "सेब");
-    drawStall(560, 204, "#f3b23c", "खाना");
+    drawStall(418, 78, "#f3b23c", "खाना");
     drawStall(878, 160, "#047c86", "लाल");
     drawSign(1088, 405, "५");
   }
@@ -861,6 +887,63 @@
     ctx.restore();
   }
 
+  function drawGuideCallout() {
+    const guide = state.guideCallout;
+    if (!guide) return;
+
+    const progress = 1 - guide.life / guide.duration;
+    const pulse = Math.sin(guide.pulse * 8);
+    const ring = 48 + pulse * 5;
+    const boxW = 268;
+    const boxH = 64;
+    const boxX = clamp(guide.x - boxW / 2, 28, WORLD.width - boxW - 28);
+    const boxY = clamp(guide.y - 140 + pulse * 4, 30, WORLD.height - boxH - 120);
+    const arrowX = clamp(guide.x, boxX + 32, boxX + boxW - 32);
+    const alpha = Math.min(1, Math.max(0, guide.life < 0.45 ? guide.life / 0.45 : progress / 0.18));
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = guide.color;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(guide.x, guide.y, ring, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.92)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(guide.x, guide.y, ring + 15, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = guide.color;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(arrowX, boxY + boxH);
+    ctx.quadraticCurveTo((arrowX + guide.x) / 2, boxY + boxH + 32, guide.x, guide.y - 42);
+    ctx.stroke();
+    ctx.fillStyle = guide.color;
+    ctx.beginPath();
+    ctx.moveTo(guide.x, guide.y - 30);
+    ctx.lineTo(guide.x - 11, guide.y - 50);
+    ctx.lineTo(guide.x + 11, guide.y - 50);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255,255,255,0.96)";
+    ctx.strokeStyle = "rgba(23,32,51,0.14)";
+    ctx.lineWidth = 2;
+    fillRoundRect(boxX, boxY, boxW, boxH, 8);
+    strokeRoundRect(boxX, boxY, boxW, boxH, 8);
+    ctx.fillStyle = "#075b66";
+    ctx.font = "900 17px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(guide.title, boxX + boxW / 2, boxY + 25);
+    ctx.fillStyle = "#647084";
+    ctx.font = "850 14px Inter, sans-serif";
+    ctx.fillText(guide.subtext, boxX + boxW / 2, boxY + 47);
+    ctx.restore();
+  }
+
   function drawPlayer() {
     const bob = Math.sin(state.time * 10) * 2;
     ctx.save();
@@ -971,7 +1054,6 @@
     els.challengeTitle.textContent = mode.title(word);
     els.challengePrompt.textContent = mode.prompt(word);
     els.challengeHint.textContent = mode.hint(word);
-    els.challengeArt.textContent = firstGlyph(word.hindi);
     els.choiceGrid.textContent = "";
 
     challenge.options.forEach((option, index) => {
@@ -982,7 +1064,8 @@
       button.dataset.id = option.id;
       button.disabled = isDisabled;
       button.innerHTML = `
-        <span>
+        <span class="choice-visual" aria-hidden="true">${wordVisualSvg(option)}</span>
+        <span class="choice-copy">
           <span class="choice-main">${mode.main(option)}</span>
           <span class="choice-sub">${mode.sub(option)}</span>
         </span>
@@ -1068,6 +1151,7 @@
     els.challengeOverlay.hidden = true;
     clearChallengeFeedback();
     syncPanels();
+    showPendingGuide();
   }
 
   function completeNode(node, word) {
@@ -1085,12 +1169,25 @@
     burst(node.x, node.y);
 
     if (chapterComplete(currentChapter())) {
-      flashUnlock(currentChapter().portal, "Gyan Gate Open", "#7a4fb1");
+      const portal = currentChapter().portal;
+      flashUnlock(portal, "Gyan Gate Open", "#7a4fb1");
+      state.pendingGuide = {
+        color: "#7a4fb1",
+        subtext: "Tap the glowing gate",
+        target: portal,
+        title: "Gyan gate is open",
+      };
       setMessage("ज्ञान द्वार खुल गया! Tap the gate.");
     } else {
       const next = nextLessonNode(currentChapter());
       flashUnlock(next, "New Lesson Unlocked");
-      setMessage(`${word.hindi} joined your journal. Next lesson unlocked.`);
+      state.pendingGuide = {
+        color: "#f3b23c",
+        subtext: `Go to Stage ${stageNumberFor(next)}`,
+        target: next,
+        title: "Next stage unlocked",
+      };
+      setMessage(`${word.hindi} joined your journal. Go to the next stage.`);
     }
 
     syncPanels();
@@ -1225,6 +1322,26 @@
     });
   }
 
+  function wordVisualSvg(word) {
+    const visual = WORD_VISUALS[word.id] || { emoji: firstGlyph(word.hindi), color: "#047c86", ground: "#e9fbf7" };
+    const label = escapeHtml(word.hindi);
+    const emoji = escapeHtml(visual.emoji);
+    const color = escapeHtml(visual.color);
+    const ground = escapeHtml(visual.ground);
+
+    return `
+      <svg viewBox="0 0 180 150" role="img" aria-label="${label}">
+        <rect width="180" height="150" rx="10" fill="${ground}"></rect>
+        <circle cx="145" cy="32" r="22" fill="#ffd95a" opacity="0.9"></circle>
+        <path d="M0 112 C34 92 66 116 96 98 C125 82 150 96 180 82 L180 150 L0 150 Z" fill="#94d2a0"></path>
+        <circle cx="54" cy="56" r="38" fill="${color}" opacity="0.16"></circle>
+        <text x="90" y="80" text-anchor="middle" dominant-baseline="middle" font-size="50" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" fill="${color}">${emoji}</text>
+        <rect x="34" y="104" width="112" height="31" rx="8" fill="rgba(255,255,255,0.88)" stroke="rgba(23,32,51,0.14)" stroke-width="2"></rect>
+        <text x="90" y="126" text-anchor="middle" font-size="20" font-weight="900" font-family="Noto Sans Devanagari, Nirmala UI, sans-serif" fill="#172033">${label}</text>
+      </svg>
+    `;
+  }
+
   function syncNearby() {
     if (state.challenge || state.pathOpening || !els.tutorial.hidden) {
       els.nearbyChip.hidden = true;
@@ -1247,19 +1364,26 @@
     positionNearbyChip();
 
     if (action.type === "locked") {
-      els.nearbyTitle.textContent = "Locked lesson";
-      els.nearbyWord.textContent = "Finish the glowing lesson first";
+      const stageNumber = stageNumberFor(action.node);
+      els.nearbyTitle.textContent = `Stage ${stageNumber} locked`;
+      els.nearbyWord.textContent = "Clear earlier stage";
       els.interact.hidden = true;
-      els.interact.disabled = true;
+      els.nearbyChip.setAttribute("aria-label", `Stage ${stageNumber} locked. Clear earlier stage first.`);
       return;
     }
 
-    const word = WORD_BY_ID.get(action.node.wordId);
-    els.nearbyTitle.textContent = "Lesson found";
-    els.nearbyWord.textContent = `${word.hindi} · ${titleCase(word.english)}`;
+    const stageNumber = stageNumberFor(action.node);
+    const mode = MODES[action.node.mode];
+    els.nearbyTitle.textContent = `Stage ${stageNumber}`;
+    els.nearbyWord.textContent = mode.label;
     els.interact.hidden = false;
-    els.interact.disabled = false;
     els.interact.textContent = "Learn";
+    els.nearbyChip.setAttribute("aria-label", `Start stage ${stageNumber}`);
+  }
+
+  function stageNumberFor(node) {
+    const index = currentChapter().nodes.findIndex((candidate) => candidate.id === node.id);
+    return index >= 0 ? index + 1 : 1;
   }
 
   function nearbyAction() {
@@ -1283,8 +1407,8 @@
 
     const scaleX = canvasRect.width / WORLD.width;
     const scaleY = canvasRect.height / WORLD.height;
-    const estimatedWidth = Math.min(canvasRect.width - 20, canvasRect.width < 560 ? 348 : 360);
-    const estimatedHeight = canvasRect.width < 560 ? 118 : 74;
+    const estimatedWidth = Math.min(canvasRect.width - 20, canvasRect.width < 560 ? 278 : 292);
+    const estimatedHeight = canvasRect.width < 560 ? 64 : 72;
     const rawX = state.player.x * scaleX;
     const rawY = (state.player.y + 38) * scaleY;
     const x = clamp(rawX, estimatedWidth / 2 + 10, canvasRect.width - estimatedWidth / 2 - 10);
@@ -1323,6 +1447,28 @@
     state.message = message;
     state.messageTimer = 4;
     syncPanels();
+  }
+
+  function guideToTarget(target, title, subtext, color = "#f3b23c") {
+    if (!target) return;
+    state.guideCallout = {
+      color,
+      duration: 4.2,
+      life: 4.2,
+      pulse: 0,
+      subtext,
+      title,
+      x: target.x,
+      y: target.y,
+    };
+    flashUnlock(target, title, color);
+  }
+
+  function showPendingGuide() {
+    const guide = state.pendingGuide;
+    if (!guide) return;
+    state.pendingGuide = null;
+    guideToTarget(guide.target, guide.title, guide.subtext, guide.color);
   }
 
   function flashUnlock(target, text, color = "#f3b23c") {
@@ -1364,6 +1510,11 @@
   function closeTutorial() {
     els.tutorial.hidden = true;
     window.localStorage.setItem(TUTORIAL_KEY, "1");
+    if (state.chapterIndex === 0 && state.completed.size === 0 && !state.challenge) {
+      const first = nextLessonNode(currentChapter());
+      guideToTarget(first, "Tap Stage 1", "Start at the glowing question");
+      setMessage("Tap the glowing Stage 1 marker to begin.");
+    }
   }
 
   function hasSeenTutorial() {
@@ -1478,6 +1629,14 @@
 
   function titleCase(value) {
     return value.replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
   function firstGlyph(value) {

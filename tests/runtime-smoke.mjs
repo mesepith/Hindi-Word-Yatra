@@ -137,7 +137,6 @@ function fakeCanvasContext() {
 
 const ids = [
   "bestValue",
-  "challengeArt",
   "challengeFeedback",
   "challengeHint",
   "challengeMode",
@@ -172,7 +171,6 @@ const ids = [
   "scoreValue",
   "soundButton",
   "startTutorialButton",
-  "touchInteractButton",
   "tutorialButton",
   "tutorialOverlay",
   "victoryCopy",
@@ -181,12 +179,6 @@ const ids = [
 ];
 
 const elements = new Map(ids.map((id) => [id, new FakeElement(id === "gameCanvas" ? "canvas" : "div")]));
-const moveButtons = ["up", "left", "down", "right"].map((dir) => {
-  const button = new FakeElement("button");
-  button.dataset.dir = dir;
-  return button;
-});
-
 let frameCount = 0;
 const sandbox = {
   AudioContext: undefined,
@@ -200,7 +192,7 @@ const sandbox = {
     addEventListener: () => {},
     createElement: (tagName) => new FakeElement(tagName),
     querySelector: (selector) => elements.get(selector.replace("#", "")) || new FakeElement(),
-    querySelectorAll: (selector) => (selector === ".move-pad button" ? moveButtons : []),
+    querySelectorAll: () => [],
     readyState: "complete",
   },
   localStorage: {

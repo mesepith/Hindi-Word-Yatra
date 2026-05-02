@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Hindi Word Yatra</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css?v=2" />
+    <link rel="stylesheet" href="styles.css?v=7" />
   </head>
   <body>
     <main class="game-app" aria-labelledby="gameTitle">
@@ -18,6 +18,7 @@
           <div class="brand-copy">
             <p>Hindi Adventure</p>
             <h1 id="gameTitle">Hindi Word Yatra</h1>
+            <p class="byline">by Zahir</p>
           </div>
         </div>
 
@@ -62,37 +63,13 @@
           <div class="canvas-shell">
             <canvas id="gameCanvas" width="1280" height="720" aria-label="Hindi adventure map"></canvas>
 
-            <div class="nearby-chip" id="nearbyChip" hidden>
-              <div>
-                <span id="nearbyTitle">Lesson found</span>
-                <strong id="nearbyWord">नमस्ते</strong>
-              </div>
-              <button class="action-button" id="interactButton" type="button">Learn</button>
-            </div>
-
-            <div class="touch-controls" aria-label="Touch controls">
-              <div class="move-pad">
-                <button type="button" data-dir="up" aria-label="Move up">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5 7 8H5Z"></path></svg>
-                </button>
-                <button type="button" data-dir="left" aria-label="Move left">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 8-7v14Z"></path></svg>
-                </button>
-                <button type="button" data-dir="down" aria-label="Move down">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-8h14Z"></path></svg>
-                </button>
-                <button type="button" data-dir="right" aria-label="Move right">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m19 12-8 7V5Z"></path></svg>
-                </button>
-              </div>
-              <button class="touch-action" id="touchInteractButton" type="button" aria-label="Start nearby lesson">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 3 4 7v10l8 4 8-4V7Z"></path>
-                  <path d="M12 3v18"></path>
-                  <path d="m4 7 8 4 8-4"></path>
-                </svg>
-              </button>
-            </div>
+            <button class="nearby-chip" id="nearbyChip" type="button" aria-label="Start stage" hidden>
+              <span class="nearby-copy">
+                <span id="nearbyTitle">Stage found</span>
+                <strong id="nearbyWord">Word Gate</strong>
+              </span>
+              <span class="action-button nearby-action" id="interactButton" aria-hidden="true">Learn</span>
+            </button>
           </div>
         </section>
 
@@ -148,7 +125,6 @@
         </div>
 
         <div class="challenge-main">
-          <div class="challenge-art" id="challengeArt" aria-hidden="true"></div>
           <div class="challenge-copy">
             <p id="challengePrompt">Loading...</p>
             <p id="challengeHint">Listen, look, choose.</p>
@@ -199,28 +175,28 @@
             <span>1</span>
             <div>
               <h3>Move the explorer</h3>
-              <p>Use arrow keys, WASD, tap-to-move, or the touch arrows.</p>
+              <p>Tap the map to move. Desktop: arrows or WASD.</p>
             </div>
           </li>
           <li>
             <span>2</span>
             <div>
               <h3>Learn in order</h3>
-              <p>Only the glowing lesson opens. Finish it to unlock the next one.</p>
+              <p>Only the glowing stage opens. Finish it to unlock the next.</p>
             </div>
           </li>
           <li>
             <span>3</span>
             <div>
               <h3>Listen and choose</h3>
-              <p>Tap Listen for pronunciation, then pick the correct Hindi answer.</p>
+              <p>Tap Listen, then pick the correct Hindi answer.</p>
             </div>
           </li>
           <li>
             <span>4</span>
             <div>
               <h3>Open ज्ञान द्वार</h3>
-              <p>Collect every word gem in the chapter, then tap the gate to travel on.</p>
+              <p>Collect every word gem, then tap the gate.</p>
             </div>
           </li>
         </ol>
@@ -238,6 +214,6 @@
     </section>
 
     <audio id="voiceAudio" preload="none" playsinline></audio>
-    <script src="game.js?v=2" defer></script>
+    <script src="game.js?v=7" defer></script>
   </body>
 </html>

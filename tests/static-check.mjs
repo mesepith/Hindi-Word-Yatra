@@ -30,12 +30,28 @@ for (const id of requiredIds) {
   assert(html.includes(`id="${id}"`), `Missing #${id} in index.html`);
 }
 
-assert(html.includes("styles.css?v=2"), "Stylesheet link is missing cache version");
-assert(html.includes("game.js?v=2"), "Script link is missing cache version");
+assert(html.includes("styles.css?v=7"), "Stylesheet link is missing cache version");
+assert(html.includes("game.js?v=7"), "Script link is missing cache version");
 assert(html.includes('href="favicon.svg"'), "Favicon link missing");
 assert(existsSync(join(root, "favicon.svg")), "Favicon file missing");
 assert(css.includes("@media (max-width: 720px)"), "Mobile layout media query missing");
 assert(css.includes("touch-action: none"), "Canvas touch action guard missing");
+assert(html.includes('<button class="nearby-chip"'), "Nearby lesson chip should be one large button");
+assert(!html.includes('<div class="nearby-chip"'), "Nearby lesson chip must not be a nested clickable panel");
+assert(!html.includes("move-pad"), "Mobile arrow pad should not be rendered");
+assert(!html.includes("touch arrows"), "Tutorial should not mention removed touch arrows");
+assert(!html.includes("touchInteractButton"), "Mobile action overlay should not be rendered");
+assert(!css.includes(".move-pad"), "Mobile arrow pad CSS should be removed");
+assert(!js.includes("touchVector"), "Mobile movement should use tap-to-move instead of arrow overlay state");
+assert(css.includes(".nearby-chip > *") && css.includes("pointer-events: none"), "Nearby chip children should not intercept Safari taps");
+assert(js.includes('addEventListener("pointerup", handleNearbyChipActivate)'), "Nearby chip needs pointerup tap fallback");
+assert(!js.includes("els.nearbyWord.textContent = `${word.hindi}"), "Nearby chip must not reveal lesson answers");
+assert(js.includes("stageNumberFor"), "Nearby chip should use stage labels instead of word previews");
+assert(js.includes('drawStall(418, 78, "#f3b23c", "खाना")'), "Bazaar food stall should stay clear of lesson markers");
+assert(js.includes("guideToTarget(first, \"Tap Stage 1\""), "Tutorial close should guide the first stage");
+assert(js.includes("showPendingGuide();"), "Quiz close should reveal the next-stage guide");
+assert(!js.includes("word.translit} · ${titleCase(word.english)"), "Choice subtitles must not reveal English answers");
+assert(js.includes("choice-visual"), "Choice options should include visual illustrations");
 
 new Function(js);
 
