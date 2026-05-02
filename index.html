@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Hindi Word Yatra</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=1" />
+  </head>
+  <body>
+    <main class="game-app" aria-labelledby="gameTitle">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">य</div>
+          <div class="brand-copy">
+            <p>Hindi Adventure</p>
+            <h1 id="gameTitle">Hindi Word Yatra</h1>
+          </div>
+        </div>
+
+        <section class="hud-strip" aria-label="Game status">
+          <div class="hud-stat">
+            <strong id="scoreValue">0</strong>
+            <span>Stars</span>
+          </div>
+          <div class="hud-stat">
+            <strong id="gemValue">0</strong>
+            <span>Gems</span>
+          </div>
+          <div class="hud-stat">
+            <strong id="bestValue">0</strong>
+            <span>Best</span>
+          </div>
+          <button class="icon-button" id="soundButton" type="button" aria-label="Hear current Hindi word" title="Hear word">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 10v4h4l5 4V6L8 10H4Z"></path>
+              <path d="M16 9c1.2 1.5 1.2 4.5 0 6"></path>
+              <path d="M18.5 6.5c2.7 3 2.7 8 0 11"></path>
+            </svg>
+          </button>
+          <button class="icon-button" id="restartButton" type="button" aria-label="Restart adventure" title="Restart">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 4v6h6"></path>
+              <path d="M20 11a8 8 0 1 0-2.3 5.7"></path>
+            </svg>
+          </button>
+        </section>
+      </header>
+
+      <section class="adventure-layout">
+        <section class="stage-panel" aria-label="Adventure map">
+          <div class="canvas-shell">
+            <canvas id="gameCanvas" width="1280" height="720" aria-label="Hindi adventure map"></canvas>
+
+            <div class="nearby-chip" id="nearbyChip" hidden>
+              <div>
+                <span id="nearbyTitle">Lesson found</span>
+                <strong id="nearbyWord">नमस्ते</strong>
+              </div>
+              <button class="action-button" id="interactButton" type="button">Learn</button>
+            </div>
+
+            <div class="touch-controls" aria-label="Touch controls">
+              <div class="move-pad">
+                <button type="button" data-dir="up" aria-label="Move up">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5 7 8H5Z"></path></svg>
+                </button>
+                <button type="button" data-dir="left" aria-label="Move left">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 8-7v14Z"></path></svg>
+                </button>
+                <button type="button" data-dir="down" aria-label="Move down">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-8h14Z"></path></svg>
+                </button>
+                <button type="button" data-dir="right" aria-label="Move right">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m19 12-8 7V5Z"></path></svg>
+                </button>
+              </div>
+              <button class="touch-action" id="touchInteractButton" type="button" aria-label="Start nearby lesson">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3 4 7v10l8 4 8-4V7Z"></path>
+                  <path d="M12 3v18"></path>
+                  <path d="m4 7 8 4 8-4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="side-panel" aria-label="Adventure journal">
+          <section class="chapter-panel">
+            <p class="section-kicker">Current Chapter</p>
+            <h2 id="chapterTitle">घर आँगन</h2>
+            <p id="chapterSubtitle">Home Courtyard</p>
+            <div class="focus-row" id="focusRow" aria-label="Focus hearts"></div>
+          </section>
+
+          <section class="mission-panel" aria-live="polite">
+            <p class="section-kicker">Quest Line</p>
+            <p id="questLine">Find the glowing Hindi lessons.</p>
+            <div class="chapter-progress" aria-hidden="true">
+              <div id="chapterProgressBar"></div>
+            </div>
+          </section>
+
+          <section class="phrase-panel">
+            <p class="section-kicker">Say It</p>
+            <p class="phrase-hindi" id="phraseHindi">नमस्ते</p>
+            <p class="phrase-english" id="phraseEnglish">Hello</p>
+          </section>
+
+          <section class="journal-panel">
+            <div class="journal-heading">
+              <div>
+                <p class="section-kicker">Word Journal</p>
+                <h2>Found Words</h2>
+              </div>
+              <span id="journalCount">0</span>
+            </div>
+            <ul id="journalList" class="journal-list"></ul>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <section class="challenge-overlay" id="challengeOverlay" hidden>
+      <div class="challenge-card" role="dialog" aria-modal="true" aria-labelledby="challengeTitle">
+        <div class="challenge-topline">
+          <div>
+            <p class="section-kicker" id="challengeMode">Word Gate</p>
+            <h2 id="challengeTitle">Find the Hindi word</h2>
+          </div>
+          <button class="icon-button close-button" id="closeChallengeButton" type="button" aria-label="Close lesson" title="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12"></path>
+              <path d="M18 6 6 18"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="challenge-main">
+          <div class="challenge-art" id="challengeArt" aria-hidden="true"></div>
+          <div class="challenge-copy">
+            <p id="challengePrompt">Loading...</p>
+            <p id="challengeHint">Listen, look, choose.</p>
+          </div>
+          <button class="listen-button" id="listenButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 10v4h4l5 4V6L8 10H4Z"></path>
+              <path d="M17 9.5c.9 1.2.9 3.8 0 5"></path>
+            </svg>
+            <span>Listen</span>
+          </button>
+        </div>
+
+        <div class="choice-grid" id="choiceGrid"></div>
+        <p class="challenge-feedback" id="challengeFeedback" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="victory-overlay" id="victoryOverlay" hidden>
+      <div class="victory-panel" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
+        <p class="section-kicker">Adventure Complete</p>
+        <h2 id="victoryTitle">ज्ञान द्वार खुल गया!</h2>
+        <p id="victoryCopy">Your Hindi journal is glowing with new words.</p>
+        <div class="victory-actions">
+          <button class="action-button" id="playAgainButton" type="button">Play Again</button>
+          <button class="ghost-button" id="keepExploringButton" type="button">Keep Exploring</button>
+        </div>
+      </div>
+    </section>
+
+    <audio id="voiceAudio" preload="none" playsinline></audio>
+    <script src="game.js?v=1" defer></script>
+  </body>
+</html>

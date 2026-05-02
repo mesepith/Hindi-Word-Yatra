@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="8" fill="#047c86"/>
+  <rect x="5" y="5" width="54" height="54" rx="6" fill="none" stroke="#f3b23c" stroke-width="4"/>
+  <text x="32" y="43" text-anchor="middle" font-family="Noto Sans Devanagari, Nirmala UI, sans-serif" font-size="35" font-weight="900" fill="#ffffff">य</text>
+</svg>
