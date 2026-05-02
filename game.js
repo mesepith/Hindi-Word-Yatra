@@ -163,10 +163,11 @@
     meaning: {
       label: "Meaning Gate",
       title: (word) => word.hindi,
-      hint: (word) => `Sounds like: ${word.translit}`,
+      hint: () => "Choose the English meaning.",
       prompt: (word) => `What does ${word.hindi} mean?`,
       main: (word) => titleCase(word.english),
-      sub: (word) => word.translit,
+      sub: () => "",
+      showVisualLabel: false,
     },
     listen: {
       label: "Sound Gate",
@@ -1063,11 +1064,12 @@
       button.type = "button";
       button.dataset.id = option.id;
       button.disabled = isDisabled;
+      const subText = mode.sub(option);
       button.innerHTML = `
-        <span class="choice-visual" aria-hidden="true">${wordVisualSvg(option)}</span>
+        <span class="choice-visual" aria-hidden="true">${wordVisualSvg(option, { showLabel: mode.showVisualLabel !== false })}</span>
         <span class="choice-copy">
           <span class="choice-main">${mode.main(option)}</span>
-          <span class="choice-sub">${mode.sub(option)}</span>
+          ${subText ? `<span class="choice-sub">${subText}</span>` : ""}
         </span>
         <span class="choice-index" aria-hidden="true">${index + 1}</span>
       `;
@@ -1322,12 +1324,17 @@
     });
   }
 
-  function wordVisualSvg(word) {
+  function wordVisualSvg(word, options = {}) {
     const visual = WORD_VISUALS[word.id] || { emoji: firstGlyph(word.hindi), color: "#047c86", ground: "#e9fbf7" };
+    const showLabel = options.showLabel !== false;
     const label = escapeHtml(word.hindi);
     const emoji = escapeHtml(visual.emoji);
     const color = escapeHtml(visual.color);
     const ground = escapeHtml(visual.ground);
+    const labelPlate = showLabel
+      ? `<rect x="34" y="104" width="112" height="31" rx="8" fill="rgba(255,255,255,0.88)" stroke="rgba(23,32,51,0.14)" stroke-width="2"></rect>
+        <text x="90" y="126" text-anchor="middle" font-size="20" font-weight="900" font-family="Noto Sans Devanagari, Nirmala UI, sans-serif" fill="#172033">${label}</text>`
+      : "";
 
     return `
       <svg viewBox="0 0 180 150" role="img" aria-label="${label}">
@@ -1336,8 +1343,7 @@
         <path d="M0 112 C34 92 66 116 96 98 C125 82 150 96 180 82 L180 150 L0 150 Z" fill="#94d2a0"></path>
         <circle cx="54" cy="56" r="38" fill="${color}" opacity="0.16"></circle>
         <text x="90" y="80" text-anchor="middle" dominant-baseline="middle" font-size="50" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" fill="${color}">${emoji}</text>
-        <rect x="34" y="104" width="112" height="31" rx="8" fill="rgba(255,255,255,0.88)" stroke="rgba(23,32,51,0.14)" stroke-width="2"></rect>
-        <text x="90" y="126" text-anchor="middle" font-size="20" font-weight="900" font-family="Noto Sans Devanagari, Nirmala UI, sans-serif" fill="#172033">${label}</text>
+        ${labelPlate}
       </svg>
     `;
   }
@@ -1461,7 +1467,7 @@
       x: target.x,
       y: target.y,
     };
-    flashUnlock(target, title, color);
+    burst(target.x, target.y);
   }
 
   function showPendingGuide() {

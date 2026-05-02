@@ -30,8 +30,8 @@ for (const id of requiredIds) {
   assert(html.includes(`id="${id}"`), `Missing #${id} in index.html`);
 }
 
-assert(html.includes("styles.css?v=7"), "Stylesheet link is missing cache version");
-assert(html.includes("game.js?v=7"), "Script link is missing cache version");
+assert(html.includes("styles.css?v=8"), "Stylesheet link is missing cache version");
+assert(html.includes("game.js?v=8"), "Script link is missing cache version");
 assert(html.includes('href="favicon.svg"'), "Favicon link missing");
 assert(existsSync(join(root, "favicon.svg")), "Favicon file missing");
 assert(css.includes("@media (max-width: 720px)"), "Mobile layout media query missing");
@@ -50,6 +50,12 @@ assert(js.includes("stageNumberFor"), "Nearby chip should use stage labels inste
 assert(js.includes('drawStall(418, 78, "#f3b23c", "खाना")'), "Bazaar food stall should stay clear of lesson markers");
 assert(js.includes("guideToTarget(first, \"Tap Stage 1\""), "Tutorial close should guide the first stage");
 assert(js.includes("showPendingGuide();"), "Quiz close should reveal the next-stage guide");
+assert(js.includes('hint: () => "Choose the English meaning."'), "Meaning questions should not reveal transliteration hints");
+assert(js.includes("showVisualLabel: false"), "Meaning options should hide Hindi labels in visuals");
+assert(js.includes('sub: () => ""'), "Meaning options should not show transliteration subtitles");
+assert(!js.includes("Sounds like:"), "No question hint should reveal the answer transliteration");
+assert(!js.includes("flashUnlock(target, title, color);"), "Guide callout should not duplicate unlock text");
+assert(!css.includes("width: min(100%, 390px)"), "Mobile layout should not create a fixed narrow gutter");
 assert(!js.includes("word.translit} · ${titleCase(word.english)"), "Choice subtitles must not reveal English answers");
 assert(js.includes("choice-visual"), "Choice options should include visual illustrations");
 
