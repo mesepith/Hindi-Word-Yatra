@@ -22,6 +22,17 @@ class FakeClassList {
     this.owner.className = [...this.names].join(" ");
   }
 
+  toggle(name, force) {
+    const shouldAdd = force ?? !this.names.has(name);
+    if (shouldAdd) {
+      this.names.add(name);
+    } else {
+      this.names.delete(name);
+    }
+    this.owner.className = [...this.names].join(" ");
+    return shouldAdd;
+  }
+
   contains(name) {
     return this.names.has(name);
   }
@@ -36,7 +47,11 @@ class FakeElement {
     this.dataset = {};
     this.disabled = false;
     this.hidden = false;
-    this.style = {};
+    this.style = {
+      setProperty(name, value) {
+        this[name] = value;
+      },
+    };
     this.listeners = {};
     this.textContent = "";
     this.width = 1280;
@@ -65,6 +80,12 @@ class FakeElement {
 
   play() {
     return Promise.resolve();
+  }
+
+  load() {}
+
+  removeAttribute(name) {
+    delete this[name];
   }
 
   canPlayType(type) {
@@ -128,6 +149,7 @@ const ids = [
   "chapterTitle",
   "choiceGrid",
   "closeChallengeButton",
+  "closeTutorialButton",
   "focusRow",
   "gameCanvas",
   "gemValue",
@@ -142,11 +164,17 @@ const ids = [
   "phraseEnglish",
   "phraseHindi",
   "playAgainButton",
+  "pathCopy",
+  "pathOverlay",
+  "pathTitle",
   "questLine",
   "restartButton",
   "scoreValue",
   "soundButton",
+  "startTutorialButton",
   "touchInteractButton",
+  "tutorialButton",
+  "tutorialOverlay",
   "victoryCopy",
   "victoryOverlay",
   "voiceAudio",

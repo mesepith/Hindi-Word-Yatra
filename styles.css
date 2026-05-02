@@ -262,21 +262,49 @@ h1 {
 
 .nearby-chip {
   position: absolute;
-  left: 14px;
-  bottom: 14px;
+  left: var(--chip-x, 14px);
+  top: var(--chip-y, 14px);
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: min(430px, calc(100% - 28px));
+  width: max-content;
+  max-width: min(360px, calc(100% - 20px));
   padding: 10px;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(217, 226, 237, 0.96);
   border-radius: var(--radius);
   box-shadow: 0 14px 30px rgba(23, 32, 51, 0.18);
+  transform: translateX(-50%);
+  animation: chipRise 220ms ease-out both;
+}
+
+.nearby-chip::before {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  border-left: 1px solid rgba(217, 226, 237, 0.96);
+  border-top: 1px solid rgba(217, 226, 237, 0.96);
+  content: "";
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.nearby-chip.locked {
+  background: rgba(248, 251, 252, 0.95);
+}
+
+.nearby-chip.locked strong {
+  color: var(--muted);
 }
 
 .nearby-chip[hidden] {
+  display: none;
+}
+
+.nearby-chip .action-button[hidden] {
   display: none;
 }
 
@@ -523,7 +551,9 @@ h1 {
 }
 
 .challenge-overlay,
-.victory-overlay {
+.victory-overlay,
+.tutorial-overlay,
+.path-overlay {
   position: fixed;
   inset: 0;
   z-index: 20;
@@ -534,12 +564,16 @@ h1 {
 }
 
 .challenge-overlay[hidden],
-.victory-overlay[hidden] {
+.victory-overlay[hidden],
+.tutorial-overlay[hidden],
+.path-overlay[hidden] {
   display: none;
 }
 
 .challenge-card,
-.victory-panel {
+.victory-panel,
+.tutorial-panel,
+.path-panel {
   width: min(780px, 100%);
   max-height: calc(100vh - 36px);
   overflow: auto;
@@ -644,12 +678,14 @@ h1 {
   color: #103d2f;
   background: #e8faef;
   border-color: var(--leaf);
+  animation: choiceCorrect 520ms ease-out;
 }
 
 .choice-button.wrong {
   color: #761f2c;
   background: #fff0f2;
   border-color: var(--coral);
+  animation: choiceWrong 420ms ease-out;
 }
 
 .choice-main {
@@ -699,16 +735,118 @@ h1 {
   color: #104a36;
   background: #e8faef;
   border-color: rgba(47, 155, 112, 0.55);
+  animation: feedbackPop 520ms ease-out;
 }
 
 .challenge-feedback.careful {
   color: #7c2330;
   background: #fff0f2;
   border-color: rgba(223, 82, 103, 0.55);
+  animation: feedbackPop 520ms ease-out;
 }
 
 .victory-panel {
   padding: 22px;
+}
+
+.tutorial-overlay {
+  z-index: 30;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(243, 178, 60, 0.26), transparent 30%),
+    rgba(23, 32, 51, 0.48);
+}
+
+.tutorial-panel {
+  width: min(720px, 100%);
+  padding: 18px;
+}
+
+.tutorial-topline {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tutorial-topline h2 {
+  margin: 4px 0 0;
+  font-size: clamp(1.7rem, 5vw, 2.55rem);
+  line-height: 1.05;
+}
+
+.tutorial-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tutorial-steps li {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  min-height: 120px;
+  padding: 12px;
+  background: #f8fbfc;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.tutorial-steps span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  color: #fff;
+  background: var(--teal);
+  border-radius: var(--radius);
+  font-weight: 950;
+}
+
+.tutorial-steps h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.tutorial-steps p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.tutorial-start {
+  width: 100%;
+}
+
+.path-overlay {
+  z-index: 28;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 248, 228, 0.95), rgba(243, 178, 60, 0.28) 34%, rgba(23, 32, 51, 0.38) 72%);
+}
+
+.path-panel {
+  width: min(520px, 100%);
+  padding: 24px;
+  text-align: center;
+  animation: pathPop 980ms ease-out both;
+}
+
+.path-panel h2 {
+  margin: 6px 0 0;
+  color: var(--violet);
+  font-size: clamp(2rem, 7vw, 3.4rem);
+  line-height: 1;
+}
+
+.path-panel p:not(.section-kicker) {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-weight: 850;
 }
 
 .victory-panel p:not(.section-kicker) {
@@ -736,6 +874,77 @@ h1 {
 
   100% {
     box-shadow: 0 0 0 14px rgba(243, 178, 60, 0);
+  }
+}
+
+@keyframes chipRise {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes choiceCorrect {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.035);
+    box-shadow: 0 0 0 6px rgba(47, 155, 112, 0.16);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes choiceWrong {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  55% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes feedbackPop {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pathPop {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.9);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translateY(0) scale(1.04);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -817,12 +1026,9 @@ h1 {
   }
 
   .nearby-chip {
-    left: 10px;
-    right: 10px;
-    bottom: 108px;
     align-items: stretch;
     flex-direction: column;
-    max-width: none;
+    max-width: min(348px, calc(100% - 20px));
     gap: 8px;
     justify-content: space-between;
   }
@@ -867,7 +1073,8 @@ h1 {
   }
 
   .challenge-main,
-  .choice-grid {
+  .choice-grid,
+  .tutorial-steps {
     grid-template-columns: 1fr;
   }
 
@@ -878,6 +1085,10 @@ h1 {
 
   .listen-button {
     width: 100%;
+  }
+
+  .tutorial-steps li {
+    min-height: 0;
   }
 }
 

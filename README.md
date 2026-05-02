@@ -15,8 +15,10 @@ No build step or network access is required.
 ## Gameplay
 
 - Explore the map with keyboard movement, touch controls, or tap-to-move.
-- Start glowing lessons to learn Hindi words, meanings, sounds, and sentence usage.
-- Correct answers add words to the journal and open the chapter gate.
+- First-time players see a short tutorial, and the help button can reopen it.
+- Start the single glowing lesson; later lessons stay locked until the current one is completed.
+- Correct answers stay on screen briefly, add words to the journal, and animate the next unlock.
+- Tap the ज्ञान द्वार after all chapter words are complete to open the next level.
 - Pronunciation uses packaged `.m4a`, `.mp3`, and `.ogg` files with Web Speech fallback.
 
 ## Local Smoke Test

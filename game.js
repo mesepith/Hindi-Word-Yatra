@@ -8,6 +8,7 @@
   const MAX_FOCUS = 3;
   const HINDI_LANG = "hi-IN";
   const BEST_KEY = "hindi-word-yatra-best";
+  const TUTORIAL_KEY = "hindi-word-yatra-tutorial-seen";
   const AUDIO_DIR = "assets/audio";
   const AUDIO_FORMATS = [
     { ext: "m4a", type: "audio/mp4" },
@@ -165,6 +166,7 @@
     chapterTitle: document.querySelector("#chapterTitle"),
     choiceGrid: document.querySelector("#choiceGrid"),
     closeChallenge: document.querySelector("#closeChallengeButton"),
+    closeTutorial: document.querySelector("#closeTutorialButton"),
     focusRow: document.querySelector("#focusRow"),
     gem: document.querySelector("#gemValue"),
     interact: document.querySelector("#interactButton"),
@@ -178,11 +180,17 @@
     phraseEnglish: document.querySelector("#phraseEnglish"),
     phraseHindi: document.querySelector("#phraseHindi"),
     playAgain: document.querySelector("#playAgainButton"),
+    pathCopy: document.querySelector("#pathCopy"),
+    pathOverlay: document.querySelector("#pathOverlay"),
+    pathTitle: document.querySelector("#pathTitle"),
     questLine: document.querySelector("#questLine"),
     restart: document.querySelector("#restartButton"),
     score: document.querySelector("#scoreValue"),
+    startTutorial: document.querySelector("#startTutorialButton"),
     sound: document.querySelector("#soundButton"),
     touchInteract: document.querySelector("#touchInteractButton"),
+    tutorial: document.querySelector("#tutorialOverlay"),
+    tutorialButton: document.querySelector("#tutorialButton"),
     victoryCopy: document.querySelector("#victoryCopy"),
     victoryOverlay: document.querySelector("#victoryOverlay"),
     voiceAudio: document.querySelector("#voiceAudio"),
@@ -201,12 +209,15 @@
     message: "",
     messageTimer: 0,
     particles: [],
+    pathOpening: false,
     player: { x: CHAPTERS[0].start.x, y: CHAPTERS[0].start.y, facing: 1 },
+    portalTarget: false,
     score: 0,
     streak: 0,
     tapTarget: null,
     time: 0,
     touchVector: { x: 0, y: 0 },
+    unlockAnimation: null,
   };
 
   let canvasRect = null;
@@ -221,6 +232,9 @@
     bindEvents();
     resizeCanvas();
     window.requestAnimationFrame(loop);
+    if (!hasSeenTutorial()) {
+      window.setTimeout(() => showTutorial(), 250);
+    }
   }
 
   function bindEvents() {
@@ -240,6 +254,9 @@
       setMessage("The completed trail is ready to roam.");
     });
     els.closeChallenge.addEventListener("click", closeChallenge);
+    els.closeTutorial.addEventListener("click", closeTutorial);
+    els.startTutorial.addEventListener("click", closeTutorial);
+    els.tutorialButton.addEventListener("click", showTutorial);
     els.listen.addEventListener("click", () => {
       if (state.challenge) playWord(state.challenge.word, els.listen);
     });
@@ -270,6 +287,11 @@
 
   function handleKeyDown(event) {
     const key = event.key.toLowerCase();
+    if (!els.tutorial.hidden) {
+      if (key === "escape") closeTutorial();
+      return;
+    }
+    if (state.pathOpening) return;
     const movementKeys = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"];
     if (movementKeys.includes(key)) {
       state.keys.add(key);
@@ -292,9 +314,30 @@
   }
 
   function handleCanvasPointer(event) {
-    if (state.challenge || !canvasRect) return;
+    if (state.challenge || state.pathOpening || !canvasRect) return;
     const x = ((event.clientX - canvasRect.left) / canvasRect.width) * WORLD.width;
     const y = ((event.clientY - canvasRect.top) / canvasRect.height) * WORLD.height;
+    const point = { x, y };
+    const chapter = currentChapter();
+    const tappedNode = chapter.nodes.find((node) => !state.completed.has(node.id) && distance(point, node) <= INTERACT_RADIUS);
+
+    if (tappedNode && !isNodeUnlocked(tappedNode, chapter)) {
+      state.tapTarget = null;
+      setMessage("Complete the glowing lesson first.");
+      flashUnlock(nextLessonNode(chapter), "Start here");
+      return;
+    }
+
+    if (chapterComplete(chapter) && distance(point, chapter.portal) <= PORTAL_RADIUS) {
+      state.tapTarget = { ...chapter.portal };
+      state.portalTarget = true;
+      if (distance(state.player, chapter.portal) <= PORTAL_RADIUS) {
+        advanceChapter();
+      }
+      return;
+    }
+
+    state.portalTarget = false;
     state.tapTarget = { x: clamp(x, 42, WORLD.width - 42), y: clamp(y, 72, WORLD.height - 46) };
   }
 
@@ -314,18 +357,23 @@
   }
 
   function resetAdventure() {
+    stopVoice();
     state.chapterIndex = 0;
     state.completed = new Set();
     state.focus = MAX_FOCUS;
     state.gems = 0;
     state.learned = new Map();
     state.particles = [];
+    state.pathOpening = false;
     state.score = 0;
     state.streak = 0;
     state.tapTarget = null;
+    state.portalTarget = false;
+    state.unlockAnimation = null;
     state.player = { x: CHAPTERS[0].start.x, y: CHAPTERS[0].start.y, facing: 1 };
     state.challenge = null;
     els.challengeOverlay.hidden = true;
+    els.pathOverlay.hidden = true;
     els.victoryOverlay.hidden = true;
     setMessage(CHAPTERS[0].line);
     syncPanels();
@@ -342,41 +390,57 @@
   }
 
   function update(dt) {
-    if (state.challenge) return;
+    if (!state.challenge && !state.pathOpening) {
+      let moveX = 0;
+      let moveY = 0;
 
-    let moveX = 0;
-    let moveY = 0;
+      if (state.keys.has("arrowleft") || state.keys.has("a")) moveX -= 1;
+      if (state.keys.has("arrowright") || state.keys.has("d")) moveX += 1;
+      if (state.keys.has("arrowup") || state.keys.has("w")) moveY -= 1;
+      if (state.keys.has("arrowdown") || state.keys.has("s")) moveY += 1;
 
-    if (state.keys.has("arrowleft") || state.keys.has("a")) moveX -= 1;
-    if (state.keys.has("arrowright") || state.keys.has("d")) moveX += 1;
-    if (state.keys.has("arrowup") || state.keys.has("w")) moveY -= 1;
-    if (state.keys.has("arrowdown") || state.keys.has("s")) moveY += 1;
+      moveX += state.touchVector.x;
+      moveY += state.touchVector.y;
 
-    moveX += state.touchVector.x;
-    moveY += state.touchVector.y;
+      if (!moveX && !moveY && state.tapTarget) {
+        const dx = state.tapTarget.x - state.player.x;
+        const dy = state.tapTarget.y - state.player.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 8) {
+          state.tapTarget = null;
+          if (state.portalTarget && chapterComplete(currentChapter())) {
+            state.portalTarget = false;
+            advanceChapter();
+          }
+        } else {
+          moveX = dx / dist;
+          moveY = dy / dist;
+        }
+      }
 
-    if (!moveX && !moveY && state.tapTarget) {
-      const dx = state.tapTarget.x - state.player.x;
-      const dy = state.tapTarget.y - state.player.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 8) {
-        state.tapTarget = null;
-      } else {
-        moveX = dx / dist;
-        moveY = dy / dist;
+      if (moveX || moveY) {
+        const mag = Math.hypot(moveX, moveY);
+        const nx = moveX / mag;
+        const ny = moveY / mag;
+        state.player.x = clamp(state.player.x + nx * PLAYER_SPEED * dt, 44, WORLD.width - 44);
+        state.player.y = clamp(state.player.y + ny * PLAYER_SPEED * dt, 78, WORLD.height - 42);
+        if (Math.abs(nx) > 0.1) state.player.facing = nx > 0 ? 1 : -1;
+        if (state.portalTarget && chapterComplete(currentChapter()) && distance(state.player, currentChapter().portal) <= PORTAL_RADIUS) {
+          state.portalTarget = false;
+          advanceChapter();
+        }
       }
     }
 
-    if (moveX || moveY) {
-      const mag = Math.hypot(moveX, moveY);
-      const nx = moveX / mag;
-      const ny = moveY / mag;
-      state.player.x = clamp(state.player.x + nx * PLAYER_SPEED * dt, 44, WORLD.width - 44);
-      state.player.y = clamp(state.player.y + ny * PLAYER_SPEED * dt, 78, WORLD.height - 42);
-      if (Math.abs(nx) > 0.1) state.player.facing = nx > 0 ? 1 : -1;
-    }
-
     state.messageTimer = Math.max(0, state.messageTimer - dt);
+    if (state.unlockAnimation) {
+      state.unlockAnimation.life -= dt;
+      if (state.unlockAnimation.life <= 0) {
+        state.unlockAnimation = null;
+      } else {
+        state.unlockAnimation.pulse += dt;
+      }
+    }
     state.particles = state.particles
       .map((particle) => ({
         ...particle,
@@ -397,6 +461,7 @@
     drawPortal(chapter);
     drawTapTarget();
     drawParticles();
+    drawUnlockAnimation();
     drawPlayer();
     drawChapterBanner(chapter);
   }
@@ -675,16 +740,17 @@
     chapter.nodes.forEach((node, index) => {
       const word = WORD_BY_ID.get(node.wordId);
       const done = state.completed.has(node.id);
-      const pulse = 1 + Math.sin(state.time * 4 + index) * 0.06;
+      const unlocked = isNodeUnlocked(node, chapter);
+      const pulse = unlocked && !done ? 1 + Math.sin(state.time * 4 + index) * 0.06 : 1;
       ctx.save();
       ctx.translate(node.x, node.y);
       ctx.scale(pulse, pulse);
-      ctx.fillStyle = done ? "rgba(47,155,112,0.28)" : "rgba(243,178,60,0.24)";
+      ctx.fillStyle = done ? "rgba(47,155,112,0.28)" : unlocked ? "rgba(243,178,60,0.28)" : "rgba(100,112,132,0.16)";
       ctx.beginPath();
       ctx.arc(0, 0, 48, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = done ? "#2f9b70" : "#f3b23c";
-      ctx.strokeStyle = "#ffffff";
+      ctx.fillStyle = done ? "#2f9b70" : unlocked ? "#f3b23c" : "#a7b2c1";
+      ctx.strokeStyle = unlocked || done ? "#ffffff" : "rgba(255,255,255,0.64)";
       ctx.lineWidth = 5;
       ctx.beginPath();
       ctx.moveTo(0, -36);
@@ -695,7 +761,7 @@
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = "#172033";
+      ctx.fillStyle = unlocked || done ? "#172033" : "#566276";
       ctx.font = "900 25px 'Noto Sans Devanagari', sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -703,10 +769,10 @@
       ctx.restore();
 
       ctx.save();
-      ctx.fillStyle = "rgba(23,32,51,0.72)";
+      ctx.fillStyle = unlocked || done ? "rgba(23,32,51,0.72)" : "rgba(86,98,118,0.72)";
       ctx.font = "850 17px Inter, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(done ? word.hindi : "Lesson", node.x, node.y + 66);
+      ctx.fillText(done ? word.hindi : unlocked ? "Lesson" : "Locked", node.x, node.y + 66);
       ctx.restore();
     });
   }
@@ -759,6 +825,40 @@
       ctx.fill();
       ctx.restore();
     });
+  }
+
+  function drawUnlockAnimation() {
+    const animation = state.unlockAnimation;
+    if (!animation) return;
+
+    const progress = 1 - animation.life / animation.duration;
+    const ring = 36 + progress * 72 + Math.sin(animation.pulse * 16) * 4;
+    ctx.save();
+    ctx.translate(animation.x, animation.y);
+    ctx.globalAlpha = Math.max(0, 1 - progress * 0.45);
+    ctx.strokeStyle = animation.color;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(0, 0, ring, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = Math.max(0, 1 - progress);
+    ctx.strokeStyle = "rgba(255,255,255,0.92)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, ring + 16, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.strokeStyle = "rgba(23,32,51,0.14)";
+    ctx.lineWidth = 2;
+    fillRoundRect(-118, -96, 236, 48, 8);
+    strokeRoundRect(-118, -96, 236, 48, 8);
+    ctx.fillStyle = animation.color;
+    ctx.font = "900 21px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(animation.text, 0, -72);
+    ctx.restore();
   }
 
   function drawPlayer() {
@@ -822,12 +922,25 @@
       return;
     }
 
+    if (action.type === "locked") {
+      setMessage("Complete the glowing lesson first.");
+      flashUnlock(nextLessonNode(currentChapter()), "Start here");
+      return;
+    }
+
     if (action.type === "portal") {
       advanceChapter();
     }
   }
 
   function openChallenge(node) {
+    if (!isNodeUnlocked(node, currentChapter())) {
+      setMessage("Complete the glowing lesson first.");
+      flashUnlock(nextLessonNode(currentChapter()), "Start here");
+      return;
+    }
+
+    stopVoice();
     const word = WORD_BY_ID.get(node.wordId);
     const mode = MODES[node.mode];
     const options = buildOptions(word);
@@ -841,6 +954,7 @@
       word,
     };
     renderChallenge();
+    clearChallengeFeedback();
     els.challengeOverlay.hidden = false;
     window.setTimeout(() => els.listen.focus(), 0);
     if (node.mode === "listen") {
@@ -880,6 +994,11 @@
     });
   }
 
+  function clearChallengeFeedback(message = "Choose an answer to collect this word.") {
+    els.challengeFeedback.textContent = message;
+    els.challengeFeedback.className = "challenge-feedback";
+  }
+
   function chooseOption(id) {
     const challenge = state.challenge;
     if (!challenge || !challenge.accepting || challenge.disabledIds.has(id)) return;
@@ -890,7 +1009,7 @@
       completeNode(challenge.node, challenge.word);
       renderChallengeResult(id, true);
       playTone(true);
-      window.setTimeout(closeChallenge, 900);
+      window.setTimeout(closeChallenge, 2200);
       return;
     }
 
@@ -914,7 +1033,7 @@
       renderChallenge();
       els.challengeFeedback.textContent = "Try the glowing answer.";
       els.challengeFeedback.className = "challenge-feedback careful";
-    }, 900);
+    }, 1500);
   }
 
   function renderChallengeResult(id, correct) {
@@ -930,16 +1049,24 @@
 
     if (correct) {
       els.challengeFeedback.textContent = `सही! ${challenge.word.hindi} means ${titleCase(challenge.word.english)}.`;
-      els.challengeFeedback.className = "challenge-feedback good";
+      replayFeedbackAnimation("challenge-feedback good");
     } else {
       els.challengeFeedback.textContent = `${challenge.word.hindi} means ${titleCase(challenge.word.english)}.`;
-      els.challengeFeedback.className = "challenge-feedback careful";
+      replayFeedbackAnimation("challenge-feedback careful");
     }
   }
 
+  function replayFeedbackAnimation(className) {
+    els.challengeFeedback.className = "challenge-feedback";
+    void els.challengeFeedback.offsetWidth;
+    els.challengeFeedback.className = className;
+  }
+
   function closeChallenge() {
+    stopVoice();
     state.challenge = null;
     els.challengeOverlay.hidden = true;
+    clearChallengeFeedback();
     syncPanels();
   }
 
@@ -958,9 +1085,12 @@
     burst(node.x, node.y);
 
     if (chapterComplete(currentChapter())) {
-      setMessage("ज्ञान द्वार खुल गया!");
+      flashUnlock(currentChapter().portal, "Gyan Gate Open", "#7a4fb1");
+      setMessage("ज्ञान द्वार खुल गया! Tap the gate.");
     } else {
-      setMessage(`${word.hindi} joined your journal.`);
+      const next = nextLessonNode(currentChapter());
+      flashUnlock(next, "New Lesson Unlocked");
+      setMessage(`${word.hindi} joined your journal. Next lesson unlocked.`);
     }
 
     syncPanels();
@@ -977,25 +1107,51 @@
 
   function advanceChapter() {
     const chapter = currentChapter();
+    if (state.pathOpening) return;
+
     if (!chapterComplete(chapter)) {
       setMessage("More Hindi gems are waiting.");
       return;
     }
 
-    if (state.chapterIndex >= CHAPTERS.length - 1) {
-      showVictory();
-      return;
-    }
+    showPathOpen(() => {
+      if (state.chapterIndex >= CHAPTERS.length - 1) {
+        showVictory();
+        return;
+      }
 
-    state.chapterIndex += 1;
-    const next = currentChapter();
-    state.player.x = next.start.x;
-    state.player.y = next.start.y;
+      state.chapterIndex += 1;
+      const next = currentChapter();
+      state.player.x = next.start.x;
+      state.player.y = next.start.y;
+      state.tapTarget = null;
+      state.portalTarget = false;
+      state.focus = MAX_FOCUS;
+      burst(next.start.x, next.start.y);
+      flashUnlock(nextLessonNode(next), "First Lesson");
+      setMessage(next.line);
+      syncPanels();
+    });
+  }
+
+  function showPathOpen(afterAnimation) {
+    const chapter = currentChapter();
+    const next = CHAPTERS[state.chapterIndex + 1];
+    state.pathOpening = true;
     state.tapTarget = null;
-    state.focus = MAX_FOCUS;
-    burst(next.start.x, next.start.y);
-    setMessage(next.line);
-    syncPanels();
+    state.portalTarget = false;
+    burst(chapter.portal.x, chapter.portal.y);
+    flashUnlock(chapter.portal, "Path Open", "#7a4fb1");
+    els.pathTitle.textContent = "Path Open";
+    els.pathCopy.textContent = next ? `${next.hindi} is opening.` : "The final gate is glowing.";
+    els.pathOverlay.hidden = false;
+    setMessage("Path Open");
+
+    window.setTimeout(() => {
+      els.pathOverlay.hidden = true;
+      state.pathOpening = false;
+      afterAnimation();
+    }, 1350);
   }
 
   function showVictory() {
@@ -1070,22 +1226,40 @@
   }
 
   function syncNearby() {
+    if (state.challenge || state.pathOpening || !els.tutorial.hidden) {
+      els.nearbyChip.hidden = true;
+      return;
+    }
+
     const action = nearbyAction();
     if (!action) {
       els.nearbyChip.hidden = true;
       return;
     }
 
-    els.nearbyChip.hidden = false;
     if (action.type === "portal") {
-      els.nearbyTitle.textContent = "Path open";
-      els.nearbyWord.textContent = "ज्ञान द्वार";
+      els.nearbyChip.hidden = true;
+      return;
+    }
+
+    els.nearbyChip.hidden = false;
+    els.nearbyChip.classList.toggle("locked", action.type === "locked");
+    positionNearbyChip();
+
+    if (action.type === "locked") {
+      els.nearbyTitle.textContent = "Locked lesson";
+      els.nearbyWord.textContent = "Finish the glowing lesson first";
+      els.interact.hidden = true;
+      els.interact.disabled = true;
       return;
     }
 
     const word = WORD_BY_ID.get(action.node.wordId);
     els.nearbyTitle.textContent = "Lesson found";
     els.nearbyWord.textContent = `${word.hindi} · ${titleCase(word.english)}`;
+    els.interact.hidden = false;
+    els.interact.disabled = false;
+    els.interact.textContent = "Learn";
   }
 
   function nearbyAction() {
@@ -1093,7 +1267,9 @@
     const node = chapter.nodes.find((candidate) => {
       return !state.completed.has(candidate.id) && distance(state.player, candidate) <= INTERACT_RADIUS;
     });
-    if (node) return { type: "node", node };
+    if (node) {
+      return isNodeUnlocked(node, chapter) ? { type: "node", node } : { type: "locked", node };
+    }
 
     if (chapterComplete(chapter) && distance(state.player, chapter.portal) <= PORTAL_RADIUS) {
       return { type: "portal" };
@@ -1102,8 +1278,32 @@
     return null;
   }
 
+  function positionNearbyChip() {
+    if (!canvasRect) return;
+
+    const scaleX = canvasRect.width / WORLD.width;
+    const scaleY = canvasRect.height / WORLD.height;
+    const estimatedWidth = Math.min(canvasRect.width - 20, canvasRect.width < 560 ? 348 : 360);
+    const estimatedHeight = canvasRect.width < 560 ? 118 : 74;
+    const rawX = state.player.x * scaleX;
+    const rawY = (state.player.y + 38) * scaleY;
+    const x = clamp(rawX, estimatedWidth / 2 + 10, canvasRect.width - estimatedWidth / 2 - 10);
+    const y = clamp(rawY, 12, Math.max(12, canvasRect.height - estimatedHeight - 10));
+    els.nearbyChip.style.setProperty("--chip-x", `${x}px`);
+    els.nearbyChip.style.setProperty("--chip-y", `${y}px`);
+  }
+
   function currentChapter() {
     return CHAPTERS[state.chapterIndex];
+  }
+
+  function nextLessonNode(chapter = currentChapter()) {
+    return chapter.nodes.find((node) => !state.completed.has(node.id)) || null;
+  }
+
+  function isNodeUnlocked(node, chapter = currentChapter()) {
+    const next = nextLessonNode(chapter);
+    return state.completed.has(node.id) || Boolean(next && next.id === node.id);
   }
 
   function chapterComplete(chapter) {
@@ -1111,17 +1311,32 @@
   }
 
   function latestWord() {
-    const words = [...state.learned.values()];
     if (state.challenge) return state.challenge.word;
-    if (words.length) return words[words.length - 1];
-    const firstNode = currentChapter().nodes.find((node) => !state.completed.has(node.id)) || currentChapter().nodes[0];
-    return WORD_BY_ID.get(firstNode.wordId);
+    const chapter = currentChapter();
+    const next = nextLessonNode(chapter);
+    if (next) return WORD_BY_ID.get(next.wordId);
+    const lastNode = [...chapter.nodes].reverse().find((node) => state.completed.has(node.id)) || chapter.nodes[0];
+    return WORD_BY_ID.get(lastNode.wordId);
   }
 
   function setMessage(message) {
     state.message = message;
     state.messageTimer = 4;
     syncPanels();
+  }
+
+  function flashUnlock(target, text, color = "#f3b23c") {
+    if (!target) return;
+    state.unlockAnimation = {
+      color,
+      duration: 1.8,
+      life: 1.8,
+      pulse: 0,
+      text,
+      x: target.x,
+      y: target.y,
+    };
+    burst(target.x, target.y);
   }
 
   function burst(x, y) {
@@ -1141,6 +1356,20 @@
     }
   }
 
+  function showTutorial() {
+    els.tutorial.hidden = false;
+    window.setTimeout(() => els.startTutorial.focus(), 0);
+  }
+
+  function closeTutorial() {
+    els.tutorial.hidden = true;
+    window.localStorage.setItem(TUTORIAL_KEY, "1");
+  }
+
+  function hasSeenTutorial() {
+    return window.localStorage.getItem(TUTORIAL_KEY) === "1";
+  }
+
   function chooseAudioFormat() {
     const probe = document.createElement("audio");
     return AUDIO_FORMATS.find((format) => probe.canPlayType(format.type))?.ext || "mp3";
@@ -1157,6 +1386,15 @@
     const playPromise = els.voiceAudio.play();
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(() => speakHindi(word.hindi));
+    }
+  }
+
+  function stopVoice() {
+    els.voiceAudio.pause();
+    els.voiceAudio.removeAttribute?.("src");
+    els.voiceAudio.load?.();
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
     }
   }
 

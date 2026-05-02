@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Hindi Word Yatra</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css?v=1" />
+    <link rel="stylesheet" href="styles.css?v=2" />
   </head>
   <body>
     <main class="game-app" aria-labelledby="gameTitle">
@@ -34,6 +34,13 @@
             <strong id="bestValue">0</strong>
             <span>Best</span>
           </div>
+          <button class="icon-button" id="tutorialButton" type="button" aria-label="Show tutorial" title="How to play">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 18h.01"></path>
+              <path d="M9.1 9a3 3 0 1 1 5.6 1.5c-.8 1-1.7 1.4-2.3 2.3-.3.4-.4.8-.4 1.2"></path>
+              <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
+            </svg>
+          </button>
           <button class="icon-button" id="soundButton" type="button" aria-label="Hear current Hindi word" title="Hear word">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 10v4h4l5 4V6L8 10H4Z"></path>
@@ -172,7 +179,65 @@
       </div>
     </section>
 
+    <section class="tutorial-overlay" id="tutorialOverlay" hidden>
+      <div class="tutorial-panel" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+        <div class="tutorial-topline">
+          <div>
+            <p class="section-kicker">First Quest</p>
+            <h2 id="tutorialTitle">How to Play</h2>
+          </div>
+          <button class="icon-button close-button" id="closeTutorialButton" type="button" aria-label="Close tutorial" title="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12"></path>
+              <path d="M18 6 6 18"></path>
+            </svg>
+          </button>
+        </div>
+
+        <ol class="tutorial-steps">
+          <li>
+            <span>1</span>
+            <div>
+              <h3>Move the explorer</h3>
+              <p>Use arrow keys, WASD, tap-to-move, or the touch arrows.</p>
+            </div>
+          </li>
+          <li>
+            <span>2</span>
+            <div>
+              <h3>Learn in order</h3>
+              <p>Only the glowing lesson opens. Finish it to unlock the next one.</p>
+            </div>
+          </li>
+          <li>
+            <span>3</span>
+            <div>
+              <h3>Listen and choose</h3>
+              <p>Tap Listen for pronunciation, then pick the correct Hindi answer.</p>
+            </div>
+          </li>
+          <li>
+            <span>4</span>
+            <div>
+              <h3>Open ज्ञान द्वार</h3>
+              <p>Collect every word gem in the chapter, then tap the gate to travel on.</p>
+            </div>
+          </li>
+        </ol>
+
+        <button class="action-button tutorial-start" id="startTutorialButton" type="button">Start Adventure</button>
+      </div>
+    </section>
+
+    <section class="path-overlay" id="pathOverlay" hidden>
+      <div class="path-panel" aria-live="polite">
+        <p class="section-kicker">ज्ञान द्वार</p>
+        <h2 id="pathTitle">Path Open</h2>
+        <p id="pathCopy">A new chapter is opening.</p>
+      </div>
+    </section>
+
     <audio id="voiceAudio" preload="none" playsinline></audio>
-    <script src="game.js?v=1" defer></script>
+    <script src="game.js?v=2" defer></script>
   </body>
 </html>
