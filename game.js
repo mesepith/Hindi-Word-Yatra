@@ -240,6 +240,7 @@
     focus: MAX_FOCUS,
     gems: 0,
     guideCallout: null,
+    guidedWalk: null,
     keys: new Set(),
     learned: new Map(),
     message: "",
@@ -247,7 +248,7 @@
     particles: [],
     pathOpening: false,
     pendingGuide: null,
-    player: { x: CHAPTERS[0].start.x, y: CHAPTERS[0].start.y, facing: 1 },
+    player: { x: CHAPTERS[0].start.x, y: CHAPTERS[0].start.y, facing: 1, moving: false, walkCycle: 0 },
     portalTarget: false,
     score: 0,
     streak: 0,
@@ -257,6 +258,7 @@
   };
 
   let canvasRect = null;
+  const viewport = { dpr: 1, offsetX: 0, offsetY: 0, scale: 1 };
   let lastFrame = 0;
   let audioContext = null;
   let preferredAudioFormat = null;
@@ -321,6 +323,7 @@
     const movementKeys = ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"];
     if (movementKeys.includes(key)) {
       state.keys.add(key);
+      state.guidedWalk = null;
       state.tapTarget = null;
       event.preventDefault();
       return;
@@ -341,14 +344,15 @@
 
   function handleCanvasPointer(event) {
     if (state.challenge || state.pathOpening || !canvasRect) return;
-    const x = ((event.clientX - canvasRect.left) / canvasRect.width) * WORLD.width;
-    const y = ((event.clientY - canvasRect.top) / canvasRect.height) * WORLD.height;
+    const x = (event.clientX - canvasRect.left - viewport.offsetX) / viewport.scale;
+    const y = (event.clientY - canvasRect.top - viewport.offsetY) / viewport.scale;
     const point = { x, y };
     const chapter = currentChapter();
     const tappedNode = chapter.nodes.find((node) => !state.completed.has(node.id) && distance(point, node) <= INTERACT_RADIUS);
 
     if (tappedNode && !isNodeUnlocked(tappedNode, chapter)) {
       state.tapTarget = null;
+      state.guidedWalk = null;
       setMessage("Complete the glowing lesson first.");
       flashUnlock(nextLessonNode(chapter), "Start here");
       return;
@@ -356,6 +360,7 @@
 
     if (chapterComplete(chapter) && distance(point, chapter.portal) <= PORTAL_RADIUS) {
       state.tapTarget = { ...chapter.portal };
+      state.guidedWalk = null;
       state.portalTarget = true;
       if (distance(state.player, chapter.portal) <= PORTAL_RADIUS) {
         state.portalTarget = false;
@@ -365,6 +370,7 @@
     }
 
     state.portalTarget = false;
+    state.guidedWalk = null;
     state.tapTarget = { x: clamp(x, 42, WORLD.width - 42), y: clamp(y, 72, WORLD.height - 46) };
   }
 
@@ -388,12 +394,13 @@
     state.particles = [];
     state.pathOpening = false;
     state.pendingGuide = null;
+    state.guidedWalk = null;
     state.score = 0;
     state.streak = 0;
     state.tapTarget = null;
     state.portalTarget = false;
     state.unlockAnimation = null;
-    state.player = { x: CHAPTERS[0].start.x, y: CHAPTERS[0].start.y, facing: 1 };
+    state.player = { x: CHAPTERS[0].start.x, y: CHAPTERS[0].start.y, facing: 1, moving: false, walkCycle: 0 };
     state.challenge = null;
     els.challengeOverlay.hidden = true;
     els.pathOverlay.hidden = true;
@@ -428,6 +435,7 @@
         const dist = Math.hypot(dx, dy);
         if (dist < 8) {
           state.tapTarget = null;
+          if (state.guidedWalk) finishGuidedWalk();
           if (state.portalTarget && chapterComplete(currentChapter())) {
             state.portalTarget = false;
             openGyanQuiz();
@@ -445,11 +453,17 @@
         state.player.x = clamp(state.player.x + nx * PLAYER_SPEED * dt, 44, WORLD.width - 44);
         state.player.y = clamp(state.player.y + ny * PLAYER_SPEED * dt, 78, WORLD.height - 42);
         if (Math.abs(nx) > 0.1) state.player.facing = nx > 0 ? 1 : -1;
+        state.player.moving = true;
+        state.player.walkCycle += dt * 11;
         if (state.portalTarget && chapterComplete(currentChapter()) && distance(state.player, currentChapter().portal) <= PORTAL_RADIUS) {
           state.portalTarget = false;
           openGyanQuiz();
         }
+      } else {
+        state.player.moving = false;
       }
+    } else {
+      state.player.moving = false;
     }
 
     state.messageTimer = Math.max(0, state.messageTimer - dt);
@@ -481,7 +495,17 @@
 
   function draw() {
     const chapter = currentChapter();
-    ctx.clearRect(0, 0, WORLD.width, WORLD.height);
+    updateViewport();
+    ctx.setTransform(viewport.dpr, 0, 0, viewport.dpr, 0, 0);
+    ctx.clearRect(0, 0, canvasRect.width, canvasRect.height);
+    ctx.setTransform(
+      viewport.dpr * viewport.scale,
+      0,
+      0,
+      viewport.dpr * viewport.scale,
+      viewport.dpr * viewport.offsetX,
+      viewport.dpr * viewport.offsetY,
+    );
     drawBackdrop(chapter);
     drawPath(chapter);
     drawLandmarks(chapter);
@@ -948,7 +972,10 @@
   }
 
   function drawPlayer() {
-    const bob = Math.sin(state.time * 10) * 2;
+    const stride = Math.sin(state.player.walkCycle);
+    const bob = state.player.moving ? Math.abs(stride) * 4 : Math.sin(state.time * 3) * 1.2;
+    const legSwing = state.player.moving ? stride * 13 : 0;
+    const armSwing = state.player.moving ? -stride * 12 : 0;
     ctx.save();
     ctx.translate(state.player.x, state.player.y + bob);
     ctx.scale(state.player.facing, 1);
@@ -972,13 +999,13 @@
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(-12, 36);
-    ctx.lineTo(-18, 58);
+    ctx.lineTo(-18 - legSwing, 58);
     ctx.moveTo(12, 36);
-    ctx.lineTo(18, 58);
+    ctx.lineTo(18 + legSwing, 58);
     ctx.moveTo(-20, 3);
-    ctx.lineTo(-36, 18);
+    ctx.lineTo(-36 + armSwing, 18);
     ctx.moveTo(20, 3);
-    ctx.lineTo(36, 14);
+    ctx.lineTo(36 - armSwing, 14);
     ctx.stroke();
     ctx.restore();
   }
@@ -1192,7 +1219,7 @@
     els.challengeCard.classList.remove("is-complete");
     clearChallengeFeedback();
     syncPanels();
-    if (options.showGuide !== false) showPendingGuide();
+    if (options.showGuide !== false) showPendingGuide({ walk: true });
   }
 
   function completeNode(node, word) {
@@ -1487,12 +1514,13 @@
   function positionNearbyChip() {
     if (!canvasRect) return;
 
-    const scaleX = canvasRect.width / WORLD.width;
-    const scaleY = canvasRect.height / WORLD.height;
-    const estimatedWidth = Math.min(canvasRect.width - 18, canvasRect.width < 560 ? 318 : 292);
-    const estimatedHeight = canvasRect.width < 560 ? 64 : 72;
-    const rawX = state.player.x * scaleX;
-    const rawY = (state.player.y + 38) * scaleY;
+    updateViewport();
+    const isMobileCanvas = canvasRect.width < 560;
+    const estimatedWidth = Math.min(canvasRect.width - 18, isMobileCanvas ? canvasRect.width - 20 : 292);
+    const estimatedHeight = isMobileCanvas ? 62 : 72;
+    const rawX = state.player.x * viewport.scale + viewport.offsetX;
+    const mobileLift = isMobileCanvas ? 38 : 38;
+    const rawY = (state.player.y + mobileLift) * viewport.scale + viewport.offsetY;
     const x = clamp(rawX, estimatedWidth / 2 + 10, canvasRect.width - estimatedWidth / 2 - 10);
     const y = clamp(rawY, 12, Math.max(12, canvasRect.height - estimatedHeight - 10));
     els.nearbyChip.style.setProperty("--chip-x", `${x}px`);
@@ -1546,11 +1574,36 @@
     burst(target.x, target.y);
   }
 
-  function showPendingGuide() {
+  function showPendingGuide(options = {}) {
     const guide = state.pendingGuide;
     if (!guide) return;
     state.pendingGuide = null;
     guideToTarget(guide.target, guide.title, guide.subtext, guide.color);
+    if (options.walk) startGuidedWalk(guide);
+  }
+
+  function startGuidedWalk(guide) {
+    if (!guide?.target) return;
+    state.guidedWalk = guide;
+    state.portalTarget = false;
+    state.tapTarget = {
+      x: clamp(guide.target.x, 42, WORLD.width - 42),
+      y: clamp(guide.target.y, 72, WORLD.height - 46),
+    };
+    const stage = guide.target.wordId ? `Stage ${stageNumberFor(guide.target)}` : "Gyan Gate";
+    setMessage(`Walking to ${stage}. Follow the glowing path.`);
+  }
+
+  function finishGuidedWalk() {
+    const guide = state.guidedWalk;
+    state.guidedWalk = null;
+    if (!guide?.target) return;
+    guideToTarget(guide.target, guide.title, guide.subtext, guide.color);
+    if (guide.target.wordId) {
+      setMessage(`You reached Stage ${stageNumberFor(guide.target)}. Tap Learn to continue.`);
+    } else {
+      setMessage("You reached the Gyan Gate. Tap the gate to open it.");
+    }
   }
 
   function flashUnlock(target, text, color = "#f3b23c") {
@@ -1676,9 +1729,22 @@
   function resizeCanvas() {
     canvasRect = els.canvas.getBoundingClientRect();
     const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+    viewport.dpr = dpr;
     els.canvas.width = Math.round(canvasRect.width * dpr);
     els.canvas.height = Math.round(canvasRect.height * dpr);
-    ctx.setTransform(els.canvas.width / WORLD.width, 0, 0, els.canvas.height / WORLD.height, 0, 0);
+    updateViewport();
+  }
+
+  function updateViewport() {
+    if (!canvasRect) return;
+    const scale = Math.max(canvasRect.width / WORLD.width, canvasRect.height / WORLD.height);
+    const scaledWidth = WORLD.width * scale;
+    const scaledHeight = WORLD.height * scale;
+    const targetX = canvasRect.width / 2 - state.player.x * scale;
+    const targetY = canvasRect.height / 2 - state.player.y * scale;
+    viewport.scale = scale;
+    viewport.offsetX = clamp(targetX, canvasRect.width - scaledWidth, 0);
+    viewport.offsetY = clamp(targetY, canvasRect.height - scaledHeight, 0);
   }
 
   function readBest() {

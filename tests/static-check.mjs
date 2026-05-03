@@ -51,7 +51,7 @@ assert(!js.includes("els.nearbyWord.textContent = `${word.hindi}"), "Nearby chip
 assert(js.includes("stageNumberFor"), "Nearby chip should use stage labels instead of word previews");
 assert(js.includes('drawStall(418, 78, "#f3b23c", "खाना")'), "Bazaar food stall should stay clear of lesson markers");
 assert(js.includes("guideToTarget(first, \"Tap Stage 1\""), "Tutorial close should guide the first stage");
-assert(js.includes("showPendingGuide();"), "Quiz close should reveal the next-stage guide");
+assert(js.includes("showPendingGuide({ walk: true });"), "Quiz close should reveal and walk toward the next-stage guide");
 assert(js.includes('hint: () => "Choose the English meaning."'), "Meaning questions should not reveal transliteration hints");
 assert(js.includes("showVisualLabel: false"), "Meaning options should hide Hindi labels in visuals");
 assert(js.includes('sub: () => ""'), "Meaning options should not show transliteration subtitles");
@@ -62,7 +62,7 @@ assert(js.includes('kind: "gyan"'), "Gyan gate should ask a memory quiz before t
 assert(js.includes("Memory gate cleared"), "Correct Gyan answer should show a memory success reveal");
 assert(css.includes(".challenge-card.is-complete"), "Correct answers should use a centered reveal state");
 assert(css.includes("height: calc(100vh - 118px)"), "Desktop game canvas should fill the play viewport");
-assert(css.includes("height: calc(100dvh - 98px)"), "Mobile game canvas should fill the visible play viewport");
+assert(css.includes("height: calc(100dvh - 168px)"), "Mobile game canvas should fill the visible play viewport below the compact header");
 assert(css.includes(".side-panel {\n    display: none;"), "Mobile play view should hide journal panels");
 assert(css.includes(".adventure-layout") && css.includes("grid-template-columns: 1fr"), "Map should occupy the full play width");
 assert(!js.includes('if (node.mode === "listen")'), "Lesson modal should auto-play every word, not only listen mode");
@@ -70,6 +70,12 @@ assert(!js.includes("state.portalTarget = false;\n            advanceChapter();"
 assert(!js.includes("state.portalTarget = false;\n          advanceChapter();"), "Direct portal tap should open the Gyan memory quiz");
 assert(!js.includes("word.translit} · ${titleCase(word.english)"), "Choice subtitles must not reveal English answers");
 assert(js.includes("choice-visual"), "Choice options should include visual illustrations");
+assert(js.includes("updateViewport()"), "Canvas renderer should use a viewport camera");
+assert(js.includes("viewport.dpr * viewport.scale"), "Canvas renderer must use uniform scaling");
+assert(!js.includes("els.canvas.width / WORLD.width, 0, 0, els.canvas.height / WORLD.height"), "Canvas must not stretch world X/Y independently");
+assert(js.includes("startGuidedWalk(guide)"), "Correct answers should guide the player toward the next stage");
+assert(js.includes("finishGuidedWalk()"), "Guided walking should announce arrival at the next stage");
+assert(js.includes("state.player.walkCycle"), "Player should have a visible walking animation");
 
 new Function(js);
 
