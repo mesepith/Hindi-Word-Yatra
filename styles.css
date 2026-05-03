@@ -58,10 +58,10 @@ button {
 }
 
 .game-app {
-  width: min(1480px, 100%);
+  width: 100%;
   min-height: 100vh;
-  margin: 0 auto;
-  padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  margin: 0;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
 }
 
 .topbar {
@@ -226,9 +226,9 @@ h1 {
 
 .adventure-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(286px, 350px);
+  gap: 10px;
+  margin-top: 10px;
   align-items: start;
 }
 
@@ -249,7 +249,9 @@ h1 {
 #gameCanvas {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: calc(100vh - 126px);
+  min-height: 520px;
+  aspect-ratio: auto;
   touch-action: none;
 }
 
@@ -573,6 +575,17 @@ h1 {
   padding: 16px;
 }
 
+.challenge-card.is-complete {
+  display: grid;
+  min-height: min(520px, calc(100vh - 36px));
+  align-content: center;
+}
+
+.challenge-card.is-complete .challenge-topline,
+.challenge-card.is-complete .challenge-main {
+  display: none;
+}
+
 .challenge-topline {
   display: flex;
   align-items: start;
@@ -630,6 +643,11 @@ h1 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
+}
+
+.challenge-card.is-complete .choice-grid {
+  display: block;
+  margin-top: 0;
 }
 
 .choice-button {
@@ -732,6 +750,87 @@ h1 {
   background: #e8faef;
   border-color: rgba(47, 155, 112, 0.55);
   animation: feedbackPop 520ms ease-out;
+}
+
+.challenge-card.is-complete .challenge-feedback {
+  width: min(360px, 100%);
+  margin: 14px auto 0;
+  text-align: center;
+}
+
+.answer-reveal {
+  position: relative;
+  display: grid;
+  min-height: 280px;
+  place-items: center;
+  overflow: hidden;
+  padding: 34px 24px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(243, 178, 60, 0.26), transparent 34%),
+    linear-gradient(180deg, #f4fffa, #ffffff);
+  border: 2px solid rgba(47, 155, 112, 0.28);
+  border-radius: var(--radius);
+  animation: feedbackPop 520ms ease-out;
+}
+
+.answer-badge {
+  display: grid;
+  width: 78px;
+  height: 78px;
+  place-items: center;
+  color: #fff;
+  background: var(--leaf);
+  border: 5px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 12px 28px rgba(47, 155, 112, 0.24);
+  font-family: "Noto Sans Devanagari", "Nirmala UI", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 950;
+}
+
+.answer-reveal h3 {
+  margin: 10px 0 0;
+  font-family: "Noto Sans Devanagari", "Nirmala UI", sans-serif;
+  font-size: clamp(2.2rem, 8vw, 4rem);
+  line-height: 1;
+}
+
+.answer-reveal p:last-of-type {
+  max-width: 440px;
+  margin: 8px auto 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+.answer-sparkles span {
+  position: absolute;
+  display: block;
+  width: 14px;
+  height: 14px;
+  background: var(--saffron);
+  border-radius: 50%;
+  animation: sparkleFloat 1100ms ease-in-out infinite alternate;
+}
+
+.answer-sparkles span:nth-child(1) {
+  left: 16%;
+  top: 24%;
+}
+
+.answer-sparkles span:nth-child(2) {
+  right: 18%;
+  top: 30%;
+  background: var(--coral);
+  animation-delay: 180ms;
+}
+
+.answer-sparkles span:nth-child(3) {
+  right: 26%;
+  bottom: 18%;
+  background: var(--teal);
+  animation-delay: 320ms;
 }
 
 .challenge-feedback.careful {
@@ -944,6 +1043,18 @@ h1 {
   }
 }
 
+@keyframes sparkleFloat {
+  0% {
+    opacity: 0.45;
+    transform: translateY(8px) scale(0.82);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.08);
+  }
+}
+
 @keyframes pathPop {
   0% {
     opacity: 0;
@@ -970,6 +1081,11 @@ h1 {
 
   .adventure-layout {
     grid-template-columns: 1fr;
+  }
+
+  #gameCanvas {
+    height: min(70vh, 62vw);
+    min-height: 430px;
   }
 
   .side-panel {

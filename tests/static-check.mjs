@@ -30,8 +30,8 @@ for (const id of requiredIds) {
   assert(html.includes(`id="${id}"`), `Missing #${id} in index.html`);
 }
 
-assert(html.includes("styles.css?v=8"), "Stylesheet link is missing cache version");
-assert(html.includes("game.js?v=8"), "Script link is missing cache version");
+assert(html.includes("styles.css?v=9"), "Stylesheet link is missing cache version");
+assert(html.includes("game.js?v=9"), "Script link is missing cache version");
 assert(html.includes('href="favicon.svg"'), "Favicon link missing");
 assert(existsSync(join(root, "favicon.svg")), "Favicon file missing");
 assert(css.includes("@media (max-width: 720px)"), "Mobile layout media query missing");
@@ -56,6 +56,10 @@ assert(js.includes('sub: () => ""'), "Meaning options should not show transliter
 assert(!js.includes("Sounds like:"), "No question hint should reveal the answer transliteration");
 assert(!js.includes("flashUnlock(target, title, color);"), "Guide callout should not duplicate unlock text");
 assert(!css.includes("width: min(100%, 390px)"), "Mobile layout should not create a fixed narrow gutter");
+assert(js.includes('kind: "gyan"'), "Gyan gate should ask a memory quiz before travel");
+assert(js.includes("Memory gate cleared"), "Correct Gyan answer should show a memory success reveal");
+assert(css.includes(".challenge-card.is-complete"), "Correct answers should use a centered reveal state");
+assert(css.includes("height: calc(100vh - 126px)"), "Desktop game canvas should fill the play viewport");
 assert(!js.includes("word.translit} · ${titleCase(word.english)"), "Choice subtitles must not reveal English answers");
 assert(js.includes("choice-visual"), "Choice options should include visual illustrations");
 

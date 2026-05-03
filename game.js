@@ -190,6 +190,7 @@
   const els = {
     best: document.querySelector("#bestValue"),
     canvas: document.querySelector("#gameCanvas"),
+    challengeCard: document.querySelector(".challenge-card"),
     challengeFeedback: document.querySelector("#challengeFeedback"),
     challengeHint: document.querySelector("#challengeHint"),
     challengeMode: document.querySelector("#challengeMode"),
@@ -1013,7 +1014,7 @@
     }
 
     if (action.type === "portal") {
-      advanceChapter();
+      openGyanQuiz();
     }
   }
 
@@ -1039,6 +1040,7 @@
     };
     renderChallenge();
     clearChallengeFeedback();
+    els.challengeCard.classList.remove("is-complete");
     els.challengeOverlay.hidden = false;
     window.setTimeout(() => els.listen.focus(), 0);
     if (node.mode === "listen") {
@@ -1051,6 +1053,7 @@
     if (!challenge) return;
 
     const { mode, word } = challenge;
+    els.challengeCard.classList.remove("is-complete");
     els.challengeMode.textContent = mode.label;
     els.challengeTitle.textContent = mode.title(word);
     els.challengePrompt.textContent = mode.prompt(word);
@@ -1091,6 +1094,15 @@
     const correct = id === challenge.word.id;
     if (correct) {
       challenge.accepting = false;
+      if (challenge.kind === "gyan") {
+        renderChallengeResult(id, true);
+        playTone(true);
+        window.setTimeout(() => {
+          closeChallenge({ showGuide: false });
+          advanceChapter();
+        }, 1900);
+        return;
+      }
       completeNode(challenge.node, challenge.word);
       renderChallengeResult(id, true);
       playTone(true);
@@ -1133,12 +1145,32 @@
     });
 
     if (correct) {
-      els.challengeFeedback.textContent = `सही! ${challenge.word.hindi} means ${titleCase(challenge.word.english)}.`;
-      replayFeedbackAnimation("challenge-feedback good");
+      renderSuccessReveal(challenge);
     } else {
       els.challengeFeedback.textContent = `${challenge.word.hindi} means ${titleCase(challenge.word.english)}.`;
       replayFeedbackAnimation("challenge-feedback careful");
     }
+  }
+
+  function renderSuccessReveal(challenge) {
+    const copy = challenge.kind === "gyan"
+      ? "Memory gate cleared. The next path is opening."
+      : `${challenge.word.hindi} means ${titleCase(challenge.word.english)}.`;
+    const kicker = challenge.kind === "gyan" ? "ज्ञान स्मृति" : "Word Collected";
+    els.challengeCard.classList.add("is-complete");
+    els.choiceGrid.innerHTML = `
+      <section class="answer-reveal" aria-live="polite">
+        <span class="answer-badge">सही!</span>
+        <p class="section-kicker">${kicker}</p>
+        <h3>${challenge.word.hindi}</h3>
+        <p>${copy}</p>
+        <div class="answer-sparkles" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+      </section>
+    `;
+    els.challengeFeedback.textContent = "Opening automatically...";
+    replayFeedbackAnimation("challenge-feedback good");
   }
 
   function replayFeedbackAnimation(className) {
@@ -1147,13 +1179,14 @@
     els.challengeFeedback.className = className;
   }
 
-  function closeChallenge() {
+  function closeChallenge(options = {}) {
     stopVoice();
     state.challenge = null;
     els.challengeOverlay.hidden = true;
+    els.challengeCard.classList.remove("is-complete");
     clearChallengeFeedback();
     syncPanels();
-    showPendingGuide();
+    if (options.showGuide !== false) showPendingGuide();
   }
 
   function completeNode(node, word) {
@@ -1195,6 +1228,42 @@
     syncPanels();
   }
 
+  function openGyanQuiz() {
+    const chapter = currentChapter();
+    if (!chapterComplete(chapter)) {
+      setMessage("More Hindi gems are waiting.");
+      return;
+    }
+
+    stopVoice();
+    const chapterWords = chapter.nodes.map((node) => WORD_BY_ID.get(node.wordId));
+    const word = shuffle(chapterWords)[0];
+    const mode = {
+      label: "Gyan Memory",
+      title: () => "ज्ञान स्मृति",
+      hint: () => "Remember the words from this chapter.",
+      prompt: (target) => `Which Hindi word means ${titleCase(target.english)}?`,
+      main: (option) => option.hindi,
+      sub: (option) => option.translit,
+      showVisualLabel: false,
+    };
+    state.challenge = {
+      accepting: true,
+      disabledIds: new Set(),
+      kind: "gyan",
+      lastWrong: "",
+      mode,
+      node: null,
+      options: shuffle(chapterWords),
+      word,
+    };
+    renderChallenge();
+    clearChallengeFeedback("Answer the memory gate to open the path.");
+    els.challengeCard.classList.remove("is-complete");
+    els.challengeOverlay.hidden = false;
+    window.setTimeout(() => els.listen.focus(), 0);
+  }
+
   function resetFocus() {
     state.focus = MAX_FOCUS;
     state.player.x = currentChapter().start.x;
@@ -1207,6 +1276,7 @@
   function advanceChapter() {
     const chapter = currentChapter();
     if (state.pathOpening) return;
+    if (state.challenge) return;
 
     if (!chapterComplete(chapter)) {
       setMessage("More Hindi gems are waiting.");
