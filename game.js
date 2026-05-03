@@ -358,7 +358,8 @@
       state.tapTarget = { ...chapter.portal };
       state.portalTarget = true;
       if (distance(state.player, chapter.portal) <= PORTAL_RADIUS) {
-        advanceChapter();
+        state.portalTarget = false;
+        openGyanQuiz();
       }
       return;
     }
@@ -429,7 +430,7 @@
           state.tapTarget = null;
           if (state.portalTarget && chapterComplete(currentChapter())) {
             state.portalTarget = false;
-            advanceChapter();
+            openGyanQuiz();
           }
         } else {
           moveX = dx / dist;
@@ -446,7 +447,7 @@
         if (Math.abs(nx) > 0.1) state.player.facing = nx > 0 ? 1 : -1;
         if (state.portalTarget && chapterComplete(currentChapter()) && distance(state.player, currentChapter().portal) <= PORTAL_RADIUS) {
           state.portalTarget = false;
-          advanceChapter();
+          openGyanQuiz();
         }
       }
     }
@@ -1042,10 +1043,15 @@
     clearChallengeFeedback();
     els.challengeCard.classList.remove("is-complete");
     els.challengeOverlay.hidden = false;
-    window.setTimeout(() => els.listen.focus(), 0);
-    if (node.mode === "listen") {
-      playWord(word, els.listen);
-    }
+    playWord(word, els.listen);
+    window.setTimeout(() => {
+      if (state.challenge?.word?.id === word.id && state.challenge.accepting) {
+        els.listen.focus();
+        if (els.voiceAudio.paused && !window.speechSynthesis?.speaking) {
+          playWord(word, els.listen);
+        }
+      }
+    }, 360);
   }
 
   function renderChallenge() {
@@ -1483,7 +1489,7 @@
 
     const scaleX = canvasRect.width / WORLD.width;
     const scaleY = canvasRect.height / WORLD.height;
-    const estimatedWidth = Math.min(canvasRect.width - 20, canvasRect.width < 560 ? 278 : 292);
+    const estimatedWidth = Math.min(canvasRect.width - 18, canvasRect.width < 560 ? 318 : 292);
     const estimatedHeight = canvasRect.width < 560 ? 64 : 72;
     const rawX = state.player.x * scaleX;
     const rawY = (state.player.y + 38) * scaleY;

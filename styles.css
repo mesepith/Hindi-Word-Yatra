@@ -28,6 +28,7 @@ html {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   color: var(--ink);
   background:
@@ -60,6 +61,7 @@ button {
 .game-app {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
 }
@@ -226,7 +228,7 @@ h1 {
 
 .adventure-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(286px, 350px);
+  grid-template-columns: 1fr;
   gap: 10px;
   margin-top: 10px;
   align-items: start;
@@ -249,8 +251,8 @@ h1 {
 #gameCanvas {
   display: block;
   width: 100%;
-  height: calc(100vh - 126px);
-  min-height: 520px;
+  height: calc(100vh - 118px);
+  min-height: 560px;
   aspect-ratio: auto;
   touch-action: none;
 }
@@ -384,9 +386,13 @@ h1 {
 }
 
 .side-panel {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.journal-panel {
+  grid-column: span 2;
 }
 
 .chapter-panel,
@@ -1079,17 +1085,12 @@ h1 {
     margin: 0;
   }
 
-  .adventure-layout {
-    grid-template-columns: 1fr;
-  }
-
   #gameCanvas {
     height: min(70vh, 62vw);
     min-height: 430px;
   }
 
   .side-panel {
-    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1102,38 +1103,89 @@ h1 {
   .game-app {
     width: 100%;
     max-width: 100vw;
-    padding: 10px;
+    min-height: 100dvh;
+    padding: max(4px, env(safe-area-inset-top)) max(4px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
   }
 
   .topbar {
+    display: grid;
+    grid-template-columns: 1fr;
     align-items: stretch;
-    flex-direction: column;
+    gap: 6px;
     max-width: 100%;
     min-width: 0;
+    padding: 7px;
+  }
+
+  .brand-lockup {
+    gap: 8px;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    font-size: 1.55rem;
+    border-width: 2px;
+  }
+
+  .brand-copy p:not(.byline) {
+    display: none;
+  }
+
+  .brand-copy .byline {
+    margin-top: 1px;
+    font-size: 0.66rem;
+  }
+
+  h1 {
+    margin-top: 0;
+    font-size: 1.18rem;
+    line-height: 1.05;
   }
 
   .hud-strip {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     justify-content: stretch;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
     min-width: 0;
   }
 
   .hud-stat {
     min-width: 0;
-    height: 52px;
-    padding-inline: 4px;
+    height: 34px;
+    padding: 2px;
+  }
+
+  .hud-stat strong {
+    font-size: 0.95rem;
+  }
+
+  .hud-stat span {
+    font-size: 0.58rem;
   }
 
   .hud-strip .icon-button {
     width: 100%;
-    height: 46px;
+    min-width: 0;
+    min-height: 34px;
+    height: 34px;
+  }
+
+  .hud-strip .icon-button svg {
+    width: 19px;
+    height: 19px;
   }
 
   .side-panel {
-    grid-template-columns: 1fr;
+    display: none;
+  }
+
+  .adventure-layout {
+    gap: 0;
+    margin-top: 5px;
   }
 
   .adventure-layout,
@@ -1149,7 +1201,8 @@ h1 {
   }
 
   #gameCanvas {
-    height: clamp(300px, 78vw, 348px);
+    height: calc(100vh - 98px);
+    height: calc(100dvh - 98px);
     min-height: 0;
     aspect-ratio: auto;
   }
@@ -1157,8 +1210,9 @@ h1 {
   .nearby-chip {
     align-items: center;
     flex-direction: row;
-    max-width: min(278px, calc(100% - 20px));
-    gap: 10px;
+    width: min(318px, calc(100% - 18px));
+    max-width: min(318px, calc(100% - 18px));
+    gap: 8px;
     justify-content: space-between;
   }
 
@@ -1167,13 +1221,13 @@ h1 {
   }
 
   .nearby-chip strong {
-    font-size: 1.08rem;
+    font-size: 0.98rem;
   }
 
   .nearby-action {
-    min-width: 88px;
+    min-width: 84px;
     height: 40px;
-    padding-inline: 12px;
+    padding-inline: 10px;
     font-size: 0.9rem;
   }
 

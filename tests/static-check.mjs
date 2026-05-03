@@ -30,8 +30,8 @@ for (const id of requiredIds) {
   assert(html.includes(`id="${id}"`), `Missing #${id} in index.html`);
 }
 
-assert(html.includes("styles.css?v=9"), "Stylesheet link is missing cache version");
-assert(html.includes("game.js?v=9"), "Script link is missing cache version");
+assert(html.includes("styles.css?v=11"), "Stylesheet link is missing cache version");
+assert(html.includes("game.js?v=11"), "Script link is missing cache version");
 assert(html.includes('href="favicon.svg"'), "Favicon link missing");
 assert(existsSync(join(root, "favicon.svg")), "Favicon file missing");
 assert(css.includes("@media (max-width: 720px)"), "Mobile layout media query missing");
@@ -40,6 +40,8 @@ assert(html.includes('<button class="nearby-chip"'), "Nearby lesson chip should 
 assert(!html.includes('<div class="nearby-chip"'), "Nearby lesson chip must not be a nested clickable panel");
 assert(!html.includes("move-pad"), "Mobile arrow pad should not be rendered");
 assert(!html.includes("touch arrows"), "Tutorial should not mention removed touch arrows");
+assert(html.includes("The Hindi word plays automatically"), "Tutorial should explain automatic word audio");
+assert(html.includes("answer a memory question"), "Tutorial should explain the Gyan memory question");
 assert(!html.includes("touchInteractButton"), "Mobile action overlay should not be rendered");
 assert(!css.includes(".move-pad"), "Mobile arrow pad CSS should be removed");
 assert(!js.includes("touchVector"), "Mobile movement should use tap-to-move instead of arrow overlay state");
@@ -59,7 +61,13 @@ assert(!css.includes("width: min(100%, 390px)"), "Mobile layout should not creat
 assert(js.includes('kind: "gyan"'), "Gyan gate should ask a memory quiz before travel");
 assert(js.includes("Memory gate cleared"), "Correct Gyan answer should show a memory success reveal");
 assert(css.includes(".challenge-card.is-complete"), "Correct answers should use a centered reveal state");
-assert(css.includes("height: calc(100vh - 126px)"), "Desktop game canvas should fill the play viewport");
+assert(css.includes("height: calc(100vh - 118px)"), "Desktop game canvas should fill the play viewport");
+assert(css.includes("height: calc(100dvh - 98px)"), "Mobile game canvas should fill the visible play viewport");
+assert(css.includes(".side-panel {\n    display: none;"), "Mobile play view should hide journal panels");
+assert(css.includes(".adventure-layout") && css.includes("grid-template-columns: 1fr"), "Map should occupy the full play width");
+assert(!js.includes('if (node.mode === "listen")'), "Lesson modal should auto-play every word, not only listen mode");
+assert(!js.includes("state.portalTarget = false;\n            advanceChapter();"), "Portal arrival should open the Gyan memory quiz");
+assert(!js.includes("state.portalTarget = false;\n          advanceChapter();"), "Direct portal tap should open the Gyan memory quiz");
 assert(!js.includes("word.translit} · ${titleCase(word.english)"), "Choice subtitles must not reveal English answers");
 assert(js.includes("choice-visual"), "Choice options should include visual illustrations");
 
