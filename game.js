@@ -364,7 +364,7 @@
       state.portalTarget = true;
       if (distance(state.player, chapter.portal) <= PORTAL_RADIUS) {
         state.portalTarget = false;
-        openGyanQuiz();
+        beginGyanEntrance();
       }
       return;
     }
@@ -438,7 +438,7 @@
           if (state.guidedWalk) finishGuidedWalk();
           if (state.portalTarget && chapterComplete(currentChapter())) {
             state.portalTarget = false;
-            openGyanQuiz();
+            beginGyanEntrance();
           }
         } else {
           moveX = dx / dist;
@@ -457,7 +457,7 @@
         state.player.walkCycle += dt * 11;
         if (state.portalTarget && chapterComplete(currentChapter()) && distance(state.player, currentChapter().portal) <= PORTAL_RADIUS) {
           state.portalTarget = false;
-          openGyanQuiz();
+          beginGyanEntrance();
         }
       } else {
         state.player.moving = false;
@@ -1297,6 +1297,30 @@
     window.setTimeout(() => els.listen.focus(), 0);
   }
 
+  function beginGyanEntrance() {
+    const chapter = currentChapter();
+    if (state.pathOpening || state.challenge || !chapterComplete(chapter)) return;
+
+    const next = CHAPTERS[state.chapterIndex + 1];
+    const destination = next ? next.english : "the Celebration World";
+    state.pathOpening = true;
+    state.tapTarget = null;
+    state.portalTarget = false;
+    state.guidedWalk = null;
+    burst(chapter.portal.x, chapter.portal.y);
+    flashUnlock(chapter.portal, "Final Gate", "#7a4fb1");
+    els.pathTitle.textContent = "Gyan Gate";
+    els.pathCopy.textContent = `Give the final answer to enter ${destination}.`;
+    els.pathOverlay.hidden = false;
+    setMessage(`Give the final answer to enter ${destination}.`);
+
+    window.setTimeout(() => {
+      els.pathOverlay.hidden = true;
+      state.pathOpening = false;
+      openGyanQuiz();
+    }, 1800);
+  }
+
   function resetFocus() {
     state.focus = MAX_FOCUS;
     state.player.x = currentChapter().start.x;
@@ -1602,7 +1626,7 @@
     if (guide.target.wordId) {
       setMessage(`You reached Stage ${stageNumberFor(guide.target)}. Tap Learn to continue.`);
     } else {
-      setMessage("You reached the Gyan Gate. Tap the gate to open it.");
+      beginGyanEntrance();
     }
   }
 

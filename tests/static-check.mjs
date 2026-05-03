@@ -59,6 +59,8 @@ assert(!js.includes("Sounds like:"), "No question hint should reveal the answer 
 assert(!js.includes("flashUnlock(target, title, color);"), "Guide callout should not duplicate unlock text");
 assert(!css.includes("width: min(100%, 390px)"), "Mobile layout should not create a fixed narrow gutter");
 assert(js.includes('kind: "gyan"'), "Gyan gate should ask a memory quiz before travel");
+assert(js.includes("function beginGyanEntrance()"), "Gyan gate arrival should trigger an entrance animation before the quiz");
+assert(js.includes("Give the final answer to enter"), "Gyan entrance should explain the final-answer moment");
 assert(js.includes("Memory gate cleared"), "Correct Gyan answer should show a memory success reveal");
 assert(css.includes(".challenge-card.is-complete"), "Correct answers should use a centered reveal state");
 assert(css.includes("height: calc(100vh - 118px)"), "Desktop game canvas should fill the play viewport");
@@ -68,6 +70,8 @@ assert(css.includes(".adventure-layout") && css.includes("grid-template-columns:
 assert(!js.includes('if (node.mode === "listen")'), "Lesson modal should auto-play every word, not only listen mode");
 assert(!js.includes("state.portalTarget = false;\n            advanceChapter();"), "Portal arrival should open the Gyan memory quiz");
 assert(!js.includes("state.portalTarget = false;\n          advanceChapter();"), "Direct portal tap should open the Gyan memory quiz");
+assert(js.includes("state.portalTarget = false;\n            beginGyanEntrance();"), "Portal arrival should animate the Gyan gate before the quiz");
+assert(!js.includes("You reached the Gyan Gate. Tap the gate to open it."), "Gyan arrival should not require a second tap");
 assert(!js.includes("word.translit} · ${titleCase(word.english)"), "Choice subtitles must not reveal English answers");
 assert(js.includes("choice-visual"), "Choice options should include visual illustrations");
 assert(js.includes("updateViewport()"), "Canvas renderer should use a viewport camera");
